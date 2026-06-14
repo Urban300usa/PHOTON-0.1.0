@@ -1,0 +1,2102 @@
+# PHOTON - COMPLETE SYSTEM UPGRADE
+## Version 3.1 - Final Implementation Guide
+## Date: December 5, 2025
+## Status: Ready for Implementation
+
+**Document Version:** 3.1  
+**Previous Versions:** 1.0 (Initial), 2.0 (With Clarifications), 3.0 (Header Cleanup)  
+**Changes in v3.1:**
+- Added version number display requirement on dashboard
+- Added styling specifications for version indicator
+- Added visual examples of version placement
+- Added version numbering convention
+
+**Changes in v3.0:**
+- Added header cleanup requirements
+- Added visual sidebar examples
+- Added item-by-item migration checklist
+- Clarified two-sidebar system
+- Clarified two-code system coexistence
+- Added Lucide icon specifications for badges
+- Added CSS color swatch theme previews
+
+---
+
+## ⚠️ IMPLEMENTATION ANSWERS - READ FIRST
+
+### CLARIFIED REQUIREMENTS:
+
+**1. SIDEBAR SYSTEM:**
+- **LEFT SIDEBAR (NEW):** Create new navigation sidebar on left side
+  - Navigation menu items
+  - Character info footer with top 3 badges
+  - Keep existing RIGHT sidebar untouched
+- **RIGHT SIDEBAR (EXISTING):** Do NOT modify - leave as-is
+
+**2. THEME PREVIEWS:**
+- Use CSS-only color swatch previews (3-4 color circles/squares)
+- No preview images needed
+
+**3. BADGE ICONS:**
+- Use Lucide React icons with rarity color coding
+- Make system flexible for easy icon replacement later
+- Legendary: Gold (#FFD700)
+- Epic: Purple (#9C27B0)
+- Rare: Blue (#2196F3)
+- Uncommon: Green (#4CAF50)
+
+**4. CODE SYSTEM:**
+- Keep existing PRO activation code system
+- Add new PHOTON-XXXX-XXXX-XXXX system alongside it
+- Both systems coexist (don't replace old system)
+
+**5. IMPLEMENTATION APPROACH:**
+- Work through phases systematically
+- Complete each phase fully before moving to next
+- Test thoroughly after each phase
+- Provide brief status update after each major milestone
+- If blockers arise, STOP and ASK for clarification
+
+---
+
+## TABLE OF CONTENTS
+
+1. [Application Rebranding](#1-application-rebranding)
+2. [Left Sidebar Navigation System (NEW)](#2-left-sidebar-navigation-system-new)
+3. [Lore-Accurate Theme System](#3-lore-accurate-theme-system)
+4. [Code Generation & Redemption System](#4-code-generation--redemption-system)
+5. [Badge System & User Management](#5-badge-system--user-management)
+6. [Implementation Phases](#6-implementation-phases)
+
+---
+
+## VERSION NUMBER DISPLAY
+
+### Requirement
+Display version number and development status on the dashboard in a non-intrusive way.
+
+### Specifications
+
+**Version Format:**
+- `PHOTON v0.1.0-dev | In Development`
+- OR: `v0.1.0-dev`
+- OR: `PHOTON v0.1.0 (Beta)`
+
+**Location Options (choose most appropriate):**
+1. **Bottom right corner** of dashboard (recommended)
+2. Footer of page
+3. Bottom left corner (if right is occupied)
+
+**Styling:**
+```css
+.version-indicator {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.6;
+  font-family: monospace;
+  z-index: 1;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Or if in footer */
+.footer-version {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.6;
+  font-family: monospace;
+}
+```
+
+**Visual Example (Bottom Right Corner):**
+```
+┌────────────────────────────────────────────┐
+│ PHOTON Dashboard                           │
+│                                            │
+│ [Content here]                             │
+│                                            │
+│                                            │
+│                           v0.1.0-dev       │
+│                           In Development   │
+└────────────────────────────────────────────┘
+```
+
+**Visual Example (Footer):**
+```
+┌────────────────────────────────────────────┐
+│ Dashboard Content                          │
+│                                            │
+└────────────────────────────────────────────┘
+  PHOTON © 2025 | v0.1.0-dev | In Development
+```
+
+**Requirements:**
+- Must be visible but not distracting
+- Small font size (11-12px)
+- Muted color (opacity 0.6-0.7)
+- Should respect current theme colors
+- Fixed position or in footer
+- Should not interfere with other UI elements
+- Should not be clickable (pointer-events: none if fixed position)
+
+**Version Numbering Convention:**
+- During development: `v0.x.x-dev`
+- Beta: `v0.x.x-beta`
+- Release Candidate: `v1.x.x-rc`
+- Production: `v1.x.x`
+
+**Implementation:**
+- Add version constant to config file
+- Display on dashboard (and optionally other pages)
+- Easy to update for version bumps
+
+---
+
+## ⚠️ HEADER CLEANUP REQUIREMENTS
+
+### Current Header Items (BEFORE)
+
+The header currently contains these items that need to be moved:
+
+1. **Theme Panel/Selector Button** - Opens theme selector
+2. **Mining Tab Button** - Navigation to mining page  
+3. **PRO Button** - Navigation to PRO subscription page
+4. **User Profile Button** - Shows user menu/profile
+5. **Export Button** - Opens export dialog
+6. **Admin Shield Icon** - Access to admin panel (admin only)
+
+### After Migration (AFTER)
+
+**Header should contain:**
+- Application logo/branding ("PHOTON")
+- Possibly breadcrumbs or page title
+- Any critical notifications/alerts
+- **That's it - clean and minimal**
+
+**Left Sidebar should contain:**
+- All navigation items (Dashboard, Mining, Loot, Sessions, Character, Settings)
+- Export button (as a sidebar item)
+- Theme Selector (as a sidebar item with Palette icon)
+- PRO button (as a sidebar item with Star icon)
+- Admin Panel button (as a sidebar item with Shield icon, admin-only)
+- Character footer (avatar, name, badges, logout)
+
+### Implementation Steps
+
+1. **First:** Add all items to left sidebar with proper icons
+2. **Second:** Test that each item works from the sidebar
+3. **Third:** Remove the items from the header
+4. **Fourth:** Test again to ensure nothing is broken
+5. **Fifth:** Clean up any unused header component code
+
+### Item-by-Item Migration Checklist
+
+- [ ] Theme Selector
+  - Add to sidebar with Palette icon
+  - Opens theme selector modal/panel
+  - Test functionality
+  - Remove from header
+
+- [ ] Mining Tab  
+  - Already in main nav as "Mining"
+  - Ensure it routes to /mining
+  - Remove duplicate from header
+
+- [ ] PRO Button
+  - Add to sidebar with Star icon (gold if PRO active)
+  - Routes to /pro
+  - Test functionality
+  - Remove from header
+
+- [ ] User Profile
+  - Use Character nav item for profile page
+  - Use footer avatar for quick profile access
+  - Remove profile button from header
+
+- [ ] Export Button
+  - Add to sidebar with Download icon
+  - Opens export modal/dialog
+  - Test functionality
+  - Remove from header
+
+- [ ] Admin Shield
+  - Add to sidebar with Shield icon
+  - Only visible to admins
+  - Routes to /admin
+  - Test functionality
+  - Remove from header
+
+---
+
+## 1. APPLICATION REBRANDING
+
+### Complete Rename: RAT TRACKER → PHOTON
+
+**Everywhere this name appears, change it to PHOTON:**
+
+**Code & Configuration:**
+- [ ] package.json - application name
+- [ ] environment variables (RAT_TRACKER → PHOTON)
+- [ ] All constant/variable names in code
+- [ ] API endpoint names
+- [ ] Database table names (or add migration notes)
+- [ ] File names containing "rat-tracker" or "rattracker"
+- [ ] localStorage keys (rattracker_ → photon_)
+
+**User Interface:**
+- [ ] Browser tab title: "PHOTON"
+- [ ] Logo and branding
+- [ ] All page headers and titles
+- [ ] Login/welcome screens
+- [ ] Footer text
+- [ ] About/help text
+- [ ] Meta tags for SEO
+- [ ] **Version number display on dashboard**
+  - Small, non-intrusive text in footer or corner
+  - Format: "v0.1.0-dev" or "PHOTON v0.1.0 (Development)"
+  - Include "In Development" or "Beta" status indicator
+  - Suggested location: Bottom right corner or footer
+  - Style: Small, muted text (opacity 0.6-0.7)
+  - Should not interfere with main UI
+  - Example: "PHOTON v0.1.0-dev | In Development"
+
+**Documentation:**
+- [ ] README files
+- [ ] Code comments
+- [ ] User-facing documentation
+- [ ] API documentation
+
+**User Communications:**
+- [ ] Email templates
+- [ ] Notification messages
+- [ ] Shareable card templates (/share/:id)
+
+---
+
+## 2. LEFT SIDEBAR NAVIGATION SYSTEM (NEW)
+
+### ⚠️ CRITICAL: TWO-SIDEBAR SYSTEM
+
+**LEFT SIDEBAR (NEW - TO BE CREATED):**
+- Navigation menu
+- Character footer with badges
+- This is what we're building
+
+**RIGHT SIDEBAR (EXISTING - DO NOT TOUCH):**
+- Keep exactly as it is
+- Do not modify
+- Leave all existing functionality
+
+---
+
+### Left Sidebar Specifications
+
+**Dimensions:**
+- Collapsed: 60px wide (icon-only)
+- Expanded: 240px wide (icon + text)
+- Height: Full viewport (100vh)
+- Position: Fixed LEFT side
+
+**States:**
+1. Expanded - Full width with icons and labels
+2. Collapsed - Icons only
+3. Mobile - Overlay mode
+
+### Animation Timings
+
+**Opening:**
+- Duration: 300ms
+- Easing: cubic-bezier(0.4, 0.0, 0.2, 1)
+- Width expands 60px → 240px
+- Text fades in after 50ms delay
+
+**Closing:**
+- Duration: 250ms
+- Easing: cubic-bezier(0.4, 0.0, 0.2, 1)
+- Width collapses 240px → 60px
+- Text fades out immediately
+
+**Hover Effects:**
+- Background transition: 150ms
+- Tooltips appear when collapsed (showing full menu name)
+
+### Navigation Structure
+
+**⚠️ CRITICAL: MOVE ITEMS FROM HEADER TO SIDEBAR**
+
+The following items currently in the header MUST be moved to the left sidebar:
+- Theme panel/selector button
+- Mining tab button
+- PRO button
+- User profile button
+- Export button
+- Admin shield icon
+
+After moving these to the sidebar, **REMOVE them from the header entirely**.
+
+---
+
+**Main Navigation Items (in order):**
+1. Dashboard - Home icon - Route: /
+2. Mining - Pickaxe icon - Route: /mining
+3. Loot Tracker - Treasure icon - Route: /loot
+4. Sessions - Clock icon - Route: /sessions
+5. Character - User icon - Route: /character
+6. Export - Download icon - Opens export modal/dialog
+7. Settings - Gear icon - Route: /settings
+
+**Special Action Items:**
+8. Theme Selector - Palette icon - Opens theme selector modal/panel
+9. PRO - Star icon (gold for PRO users) - Route: /pro
+10. Admin Panel - Shield icon - Route: /admin (only visible to admins)
+
+**Footer Section (when expanded):**
+- Character avatar
+- Character name
+- Top 3 badges with tooltips (badge name + rarity on hover)
+- Logout button
+
+**When Collapsed (icon-only mode):**
+- Show tooltips on hover for all items
+- Profile section shows avatar only with tooltip showing character name
+
+---
+
+**Visual Structure Example (Expanded):**
+
+```
+┌─────────────────────────┐
+│ [≡] PHOTON             │ ← Header with toggle
+├─────────────────────────┤
+│ NAVIGATION              │
+│ [🏠] Dashboard         │
+│ [⛏️] Mining            │
+│ [📦] Loot Tracker      │
+│ [📊] Sessions          │
+│ [👤] Character         │
+│ [⬇️] Export            │
+│ [⚙️] Settings          │
+│                         │
+│ ACTIONS                 │
+│ [🎨] Theme Selector    │
+│ [⭐] PRO               │
+│ [🛡️] Admin Panel      │ (admin only)
+│                         │
+├─────────────────────────┤
+│ CHARACTER               │
+│ [Avatar]                │
+│ Character Name          │
+│ 🏆 🎖️ ⭐             │ ← Top 3 badges
+│                         │
+│ [Logout]                │
+└─────────────────────────┘
+```
+
+**Visual Structure Example (Collapsed):**
+
+```
+┌────┐
+│ ≡  │ ← Toggle
+├────┤
+│ 🏠 │
+│ ⛏️ │
+│ 📦 │
+│ 📊 │
+│ 👤 │
+│ ⬇️ │
+│ ⚙️ │
+│    │
+│ 🎨 │
+│ ⭐ │
+│ 🛡️ │
+│    │
+├────┤
+│ [A]│ ← Avatar
+│ 🏆 │ ← Top badge
+│    │
+│ ⎋  │ ← Logout icon
+└────┘
+```
+
+---
+
+**Desktop (>768px):**
+- Remembers user's preferred state (localStorage: 'photon_left_sidebar_state')
+- Click toggle to open/close
+- Page content shifts smoothly
+
+**Mobile (<768px):**
+- Hidden by default
+- Opens as overlay (doesn't push content)
+- Semi-transparent backdrop (rgba(0,0,0,0.5))
+- Click backdrop to close
+- Swipe from left edge to open (optional enhancement)
+
+### State Persistence
+
+```javascript
+localStorage.setItem('photon_left_sidebar_state', 'expanded'); // or 'collapsed'
+```
+
+### Accessibility
+
+- [ ] Keyboard navigation (Tab, Enter, Escape)
+- [ ] ARIA labels and roles
+- [ ] Focus indicators
+- [ ] Screen reader announcements
+- [ ] Respect prefers-reduced-motion
+
+### CSS Structure Example
+
+```css
+.left-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 60px;
+  transition: width 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  z-index: 40; /* Below mobile backdrop */
+}
+
+.left-sidebar.expanded {
+  width: 240px;
+}
+
+.left-sidebar-label {
+  opacity: 0;
+  transition: opacity 200ms ease-in-out;
+  transition-delay: 50ms;
+}
+
+.left-sidebar.expanded .left-sidebar-label {
+  opacity: 1;
+}
+
+/* Mobile overlay backdrop */
+.left-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 39;
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .left-sidebar-backdrop.active {
+    display: block;
+  }
+}
+```
+
+---
+
+## 3. LORE-ACCURATE THEME SYSTEM
+
+### Overview
+Implement 15 lore-accurate EVE Online faction themes based on extensive research into game aesthetics, culture, and visual identity.
+
+### Technical Implementation
+
+**CSS Variable Structure:**
+```css
+:root[data-theme="caldari"] {
+  --theme-primary: #4A5568;
+  --theme-secondary: #2C3E50;
+  --theme-accent: #00A8FF;
+  --theme-highlight: #00D9FF;
+  --theme-background: #1A202C;
+  --theme-text: #F7FAFC;
+  --theme-text-secondary: #A0AEC0;
+}
+```
+
+**Theme Storage:**
+```javascript
+localStorage.setItem('photon_selected_theme', 'caldari');
+```
+
+### Theme Categories
+
+**FREE THEMES (Available to all users):**
+1. Light (default)
+2. Dark (default)
+3. Caldari State
+4. Amarr Empire
+5. Gallente Federation
+6. Minmatar Republic
+7. CONCORD
+
+**PRO-EXCLUSIVE THEMES (Require active PRO subscription):**
+8. Triglavian Collective ⭐
+9. Guristas Pirates ⭐
+10. Angel Cartel ⭐
+11. Blood Raiders ⭐
+12. Jove Empire ⭐
+13. Sleepers/Drifters ⭐
+14. Sisters of EVE ⭐
+15. ORE (Outer Ring Excavations) ⭐
+
+---
+
+### EMPIRE FACTION THEMES (FREE)
+
+#### CALDARI STATE - "Corporate Efficiency"
+
+**Lore:** Mega-corporate dictatorship. Japanese-Finnish culture. Industrial, efficient, disciplined.
+
+**Colors:**
+```css
+:root[data-theme="caldari"] {
+  --caldari-primary: #4A5568;        /* Slate grey */
+  --caldari-secondary: #2C3E50;      /* Gunmetal */
+  --caldari-accent: #00A8FF;         /* Electric blue */
+  --caldari-highlight: #00D9FF;      /* Cyan glow */
+  --caldari-background: #1A202C;     /* Dark charcoal */
+  --caldari-text: #F7FAFC;           /* Clean white */
+  --caldari-text-secondary: #A0AEC0; /* Muted blue-grey */
+}
+```
+
+**Design Elements:**
+- Geometric, angular shapes
+- Sharp corners, precise edges
+- Hexagonal grid patterns
+- Industrial sans-serif typography
+- Blue glow effects
+- Minimal ornamentation
+
+---
+
+#### AMARR EMPIRE - "Divine Authority"
+
+**Lore:** Largest empire. Theocratic monarchy. Religious zealots. Gold and scripture.
+
+**Colors:**
+```css
+:root[data-theme="amarr"] {
+  --amarr-primary: #D4AF37;          /* Imperial gold */
+  --amarr-secondary: #A52A2A;        /* Deep crimson */
+  --amarr-accent: #FFD700;           /* Bright gold */
+  --amarr-sacred: #FAFAFA;           /* Pure white */
+  --amarr-background: #2D1B00;       /* Dark brown */
+  --amarr-text: #FFD700;             /* Gold text */
+  --amarr-text-secondary: #D4AF37;   /* Muted gold */
+}
+```
+
+**Design Elements:**
+- Cathedral-inspired architecture
+- Soaring spires
+- Ornate patterns
+- Flowing curves with rigid structure
+- Serif typography with flourishes
+- Gold leaf effects
+- Pulsing glow (divine presence)
+- Engraved borders
+
+---
+
+#### GALLENTE FEDERATION - "Liberal Democracy"
+
+**Lore:** Democratic federation. French-inspired. Freedom, diversity, artistic expression.
+
+**Colors:**
+```css
+:root[data-theme="gallente"] {
+  --gallente-primary: #2E7D32;       /* Forest green */
+  --gallente-secondary: #00A86B;     /* Emerald */
+  --gallente-accent: #00BCD4;        /* Cyan blue */
+  --gallente-highlight: #76FF03;     /* Bright lime */
+  --gallente-background: #0A1F1F;    /* Dark green-black */
+  --gallente-text: #FAFAFA;          /* Clean white */
+  --gallente-text-secondary: #81C784; /* Light green */
+}
+```
+
+**Design Elements:**
+- Organic, flowing curves
+- Art nouveau inspirations
+- Smooth gradients
+- Nature-integrated design
+- Drone swarm patterns
+- Bioluminescent glows
+- Glass-like transparency
+
+---
+
+#### MINMATAR REPUBLIC - "Tribal Resilience"
+
+**Lore:** Youngest empire. Born from rebellion. Seven tribes. "Rust we trust" aesthetic.
+
+**Colors:**
+```css
+:root[data-theme="minmatar"] {
+  --minmatar-primary: #CD5C5C;       /* Rust red */
+  --minmatar-secondary: #8B4513;     /* Weathered bronze */
+  --minmatar-accent: #FF6B35;        /* Burnt orange */
+  --minmatar-tribal: #A0826D;        /* Earth tones */
+  --minmatar-background: #1A0F0A;    /* Dark rust-brown */
+  --minmatar-text: #FFF8E7;          /* Warm white */
+  --minmatar-text-secondary: #D4A574; /* Tan */
+}
+```
+
+**Design Elements:**
+- Asymmetric, improvised appearance
+- Tribal patterns
+- Riveted metal textures
+- Exposed structural elements
+- Weathered aesthetics
+- Bold industrial typography
+- Rough textured surfaces
+- Fire/spark effects
+
+---
+
+#### CONCORD - "Galactic Authority"
+
+**Lore:** Interstellar police. Neutral arbiters. Law enforcement.
+
+**Colors:**
+```css
+:root[data-theme="concord"] {
+  --concord-primary: #0B3C5D;        /* Navy blue */
+  --concord-secondary: #FFFFFF;      /* White */
+  --concord-accent: #FFD700;         /* Gold */
+  --concord-warning: #FFFF00;        /* Yellow */
+  --concord-background: #F5F5F5;     /* Light grey */
+  --concord-text: #001F3F;           /* Navy blue */
+  --concord-text-secondary: #5A6C7D; /* Muted blue */
+}
+```
+
+**Design Elements:**
+- Official governmental aesthetic
+- Badge and emblem motifs
+- Clean professional layouts
+- Authoritative typography
+- Warning stripe patterns
+- Radio wave effects
+
+---
+
+### PIRATE FACTION THEMES (PRO-EXCLUSIVE)
+
+#### TRIGLAVIAN COLLECTIVE - "Abyssal Invasion" ⭐
+
+**Lore:** Mysterious civilization from Abyssal Deadspace. Space-time mechanics masters.
+
+**Colors:**
+```css
+:root[data-theme="triglavian"] {
+  --triglavian-primary: #0D0D0D;     /* Deep black */
+  --triglavian-secondary: #B22222;   /* Blood red */
+  --triglavian-accent: #DC143C;      /* Bright crimson */
+  --triglavian-energy: #FF4500;      /* Orange-red glow */
+  --triglavian-background: #000000;  /* Pure black */
+  --triglavian-text: #FFFFFF;        /* White */
+  --triglavian-text-secondary: #FF6B6B; /* Light red */
+}
+```
+
+**Design Elements:**
+- Sharp, angular, crystalline geometry
+- Triangular motifs (three-fold nature)
+- Alien yet orderly
+- Pulsing red energy cores
+- Hexagonal tessellations
+- Harsh, alien typography
+- Disintegration particle effects
+
+---
+
+#### GURISTAS PIRATES - "Profit & Chaos" ⭐
+
+**Lore:** Ex-Caldari Navy pirates. Led by "Fatal" and "The Rabbit". Bunny skull logo.
+
+**Colors:**
+```css
+:root[data-theme="guristas"] {
+  --guristas-primary: #39FF14;       /* Lime green */
+  --guristas-secondary: #36454F;     /* Dark grey */
+  --guristas-accent: #FF1493;        /* Hot pink */
+  --guristas-tech: #00FFFF;          /* Cyan */
+  --guristas-background: #0A0A0A;    /* Very dark grey */
+  --guristas-text: #FFFFFF;          /* Bright white */
+  --guristas-text-secondary: #7FFF00; /* Chartreuse */
+}
+```
+
+**Design Elements:**
+- Cyberpunk/tech noir aesthetic
+- Bunny skull iconography (abstract)
+- Neon lighting effects
+- Hacker UI elements
+- Futuristic typography
+- Scanline effects (CRT monitor)
+- Green glow on hover
+
+---
+
+#### ANGEL CARTEL - "Outlaw Freedom" ⭐
+
+**Lore:** Largest crime faction. Fast ships. Red/black scheme. Brutal efficiency.
+
+**Colors:**
+```css
+:root[data-theme="angel"] {
+  --angel-primary: #A52A2A;          /* Deep red */
+  --angel-secondary: #0F0F0F;        /* Black */
+  --angel-accent: #FF0000;           /* Bright red */
+  --angel-metal: #C0C0C0;            /* Silver chrome */
+  --angel-background: #000000;       /* Black */
+  --angel-text: #FFFFFF;             /* White */
+  --angel-text-secondary: #FF6B6B;   /* Light red */
+}
+```
+
+**Design Elements:**
+- Aggressive, predatory aesthetic
+- Wing motifs (dark angel theme)
+- Speed lines, motion blur
+- Chrome and red metal
+- Bold aggressive typography
+- Bullet hole textures
+- Sharp, dangerous UI
+
+---
+
+#### BLOOD RAIDERS - "Vampiric Horror" ⭐
+
+**Lore:** Heretical Amarr cult. Drain blood for immortality. Terror tactics.
+
+**Colors:**
+```css
+:root[data-theme="bloodraider"] {
+  --bloodraider-primary: #8B0000;    /* Blood red */
+  --bloodraider-secondary: #6B4423;  /* Dark gold/bronze */
+  --bloodraider-accent: #DC143C;     /* Crimson */
+  --bloodraider-corrupt: #B8860B;    /* Tarnished gold */
+  --bloodraider-background: #1A0000; /* Black-red gradient */
+  --bloodraider-text: #F5F5DC;       /* Bone white */
+  --bloodraider-text-secondary: #CD5C5C; /* Indian red */
+}
+```
+
+**Design Elements:**
+- Corrupted Amarr aesthetic
+- Blood droplet patterns
+- Gothic horror elements
+- Tarnished gold and rust
+- Vampiric symbolism
+- Dripping effects
+- Heartbeat animations
+
+---
+
+#### JOVE EMPIRE - "Ancient Enigma" ⭐
+
+**Lore:** Most advanced race. Mysterious, possibly extinct. Genetic engineering masters.
+
+**Colors:**
+```css
+:root[data-theme="jove"] {
+  --jove-primary: #6A1B9A;           /* Deep purple */
+  --jove-secondary: #0D1F2D;         /* Black with blue sheen */
+  --jove-accent: #9C27B0;            /* Electric violet */
+  --jove-tech: #B0C4DE;              /* Silver/platinum */
+  --jove-background: #1A0033;        /* Dark purple-black */
+  --jove-text: #E0E0E0;              /* Luminous silver */
+  --jove-text-secondary: #BA68C8;    /* Light purple */
+}
+```
+
+**Design Elements:**
+- Impossibly advanced aesthetic
+- Perfect symmetry
+- Seamless surfaces
+- Holographic effects
+- Ancient yet futuristic
+- Mysterious glowing symbols
+- Quantum particle effects
+
+---
+
+#### SLEEPERS/DRIFTERS - "Ancient AI" ⭐
+
+**Lore:** Jove offshoots in virtual reality. Emerging as cybernetic Drifters. Wormhole space.
+
+**Colors:**
+```css
+:root[data-theme="sleeper"] {
+  --sleeper-primary: #004D40;        /* Deep teal */
+  --sleeper-secondary: #263238;      /* Dark blue-grey */
+  --sleeper-accent: #00E5FF;         /* Electric cyan */
+  --sleeper-ancient: #B8960B;        /* Muted gold */
+  --sleeper-background: #0A1929;     /* Near-black blue */
+  --sleeper-text: #E0F7FA;           /* Cyan-white */
+  --sleeper-text-secondary: #4DD0E1; /* Light cyan */
+}
+```
+
+**Design Elements:**
+- Ancient yet functional
+- Geometric, precise patterns
+- Cybernetic augmentation elements
+- Holographic displays
+- Blue electrical arcing
+- Quantum particle effects
+
+---
+
+#### SISTERS OF EVE - "Humanitarian Science" ⭐
+
+**Lore:** Humanitarian organization. Religious + scientific. Rescue operations.
+
+**Colors:**
+```css
+:root[data-theme="sisters"] {
+  --sisters-primary: #FAFAFA;        /* Pristine white */
+  --sisters-secondary: #B76E79;      /* Rose gold */
+  --sisters-accent: #4FC3F7;         /* Soft blue */
+  --sisters-sacred: #E8DED2;         /* Pearl */
+  --sisters-background: #ECEFF1;     /* Soft grey-blue */
+  --sisters-text: #424242;           /* Dark grey */
+  --sisters-text-secondary: #757575; /* Medium grey */
+}
+```
+
+**Design Elements:**
+- Medical/scientific aesthetic
+- Exploration probe patterns
+- Compassionate, welcoming design
+- Rounded, friendly shapes
+- Soft shadows and glows
+
+---
+
+#### ORE (OUTER RING EXCAVATIONS) - "Industrial Mining" ⭐
+
+**Lore:** Largest independent mining corp. Yellow/black safety colors.
+
+**Colors:**
+```css
+:root[data-theme="ore"] {
+  --ore-primary: #FFB300;            /* Industrial yellow */
+  --ore-secondary: #1A1A1A;          /* Black */
+  --ore-accent: #FF6600;             /* Orange */
+  --ore-safety: #FFFFFF;             /* White */
+  --ore-background: #2E2E2E;         /* Dark grey */
+  --ore-text: #1A1A1A;               /* Black on yellow */
+  --ore-text-secondary: #666666;     /* Medium grey */
+}
+```
+
+**Design Elements:**
+- Industrial safety aesthetic
+- Hazard stripes
+- Heavy machinery design
+- Mining drill patterns
+- Utilitarian, function-first
+- Bold safety typography
+
+---
+
+### Theme Selector UI
+
+**Design:**
+
+```
+┌─────────────────────────────────────────────┐
+│ CHOOSE YOUR THEME                           │
+├─────────────────────────────────────────────┤
+│                                             │
+│ Search: [____________] 🔍                   │
+│                                             │
+│ Filter: [All ▼] [Empire] [Pirate] [Other] │
+│                                             │
+├─────────────────────────────────────────────┤
+│                                             │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐   │
+│ │ CALDARI  │ │ AMARR    │ │ GALLENTE │   │
+│ │ ████████ │ │ ████████ │ │ ████████ │   │
+│ │ [Apply]  │ │ [Apply]  │ │ [Apply]  │   │
+│ └──────────┘ └──────────┘ └──────────┘   │
+│                                             │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐   │
+│ │TRIGLAVIAN│ │GURISTAS  │ │ ANGEL    │   │
+│ │ ████████ │ │ ████████ │ │ ████████ │   │
+│ │⭐[Locked]│ │⭐[Locked]│ │⭐[Locked]│   │
+│ └──────────┘ └──────────┘ └──────────┘   │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Preview Card Structure:**
+- Theme name
+- 3-4 color swatches in a row (CSS circles showing primary, secondary, accent, highlight)
+- PRO badge if locked
+- Apply/Unlock button
+
+**CSS Color Swatches Example:**
+```html
+<div class="theme-preview">
+  <div class="color-swatch" style="background: var(--caldari-primary)"></div>
+  <div class="color-swatch" style="background: var(--caldari-secondary)"></div>
+  <div class="color-swatch" style="background: var(--caldari-accent)"></div>
+  <div class="color-swatch" style="background: var(--caldari-highlight)"></div>
+</div>
+```
+
+---
+
+## 4. CODE GENERATION & REDEMPTION SYSTEM
+
+### ⚠️ CRITICAL: Two Code Systems
+
+**EXISTING SYSTEM:**
+- Keep the current PRO activation code system as-is
+- Do NOT remove or replace it
+- Maintain backward compatibility
+
+**NEW SYSTEM (PHOTON-XXXX-XXXX-XXXX):**
+- Add alongside existing system
+- More sophisticated features
+- Both systems visible in admin panel
+
+---
+
+### New Code Format
+
+**Structure:**
+```
+PHOTON-XXXX-XXXX-XXXX
+└─────┴────────────────┴─ 12 character encoded string
+```
+
+**Example codes:**
+- `PHOTON-A7F2-K9M3-V5X1` - PRO time only
+- `PHOTON-B3H8-N2P9-W7Y4` - Badge only
+- `PHOTON-C5J4-M8Q2-Z9K6` - PRO + Badge combo
+
+**Encoding Scheme:**
+
+The 12 characters encode:
+1. **Characters 1-2:** Code type identifier
+   - `A*` = PRO time only
+   - `B*` = Badge only
+   - `C*` = PRO time + Badge
+2. **Characters 3-6:** PRO duration (encoded days/hours/minutes)
+3. **Characters 7-9:** Badge type(s) encoded
+4. **Characters 10-11:** Max redemptions encoded
+5. **Character 12:** Checksum for validation
+
+**Character Set:** Use alphanumeric (excluding similar-looking: 0, O, 1, I, L) = 32 characters
+
+---
+
+### Admin Panel - Code Generation
+
+**Location:** Admin Panel → Codes → Generate New Code (PHOTON System)
+
+**Code Generation Form:**
+
+```
+┌─────────────────────────────────────────────┐
+│ GENERATE PHOTON ACTIVATION CODE             │
+├─────────────────────────────────────────────┤
+│                                             │
+│ Code Type: *                                │
+│ ○ PRO Time Only                            │
+│ ○ Badge Only                                │
+│ ○ PRO Time + Badge                          │
+│                                             │
+├─────────────────────────────────────────────┤
+│ PRO DURATION (if PRO time selected)         │
+├─────────────────────────────────────────────┤
+│                                             │
+│ Days:    [____]  (0-9999)                  │
+│ Hours:   [____]  (0-23)                    │
+│ Minutes: [____]  (0-59)                    │
+│                                             │
+│ Total Duration: 30 days, 12 hours, 30 min  │
+│                                             │
+├─────────────────────────────────────────────┤
+│ BADGES (if badge selected)                  │
+├─────────────────────────────────────────────┤
+│                                             │
+│ ☐ Early Adopter (Rare)                     │
+│ ☐ Beta Tester (Rare)                       │
+│ ☐ Legendary                                 │
+│ ☐ Epic                                      │
+│ ☐ Rare                                      │
+│ ☐ Uncommon                                  │
+│                                             │
+│ Note: Multiple badges can be selected       │
+│                                             │
+├─────────────────────────────────────────────┤
+│ CODE SETTINGS                               │
+├─────────────────────────────────────────────┤
+│                                             │
+│ Max Redemptions: [____]                     │
+│ (0 = unlimited, 1 = single use)            │
+│                                             │
+│ Code Valid Until: [Date Picker]            │
+│ ☐ Never expires                            │
+│                                             │
+│ Internal Note/Label: *                      │
+│ [_________________________________]         │
+│ (e.g., "Fanfest 2025 Giveaway")           │
+│                                             │
+├─────────────────────────────────────────────┤
+│                                             │
+│ [ Generate Code ] [ Generate Batch (10) ]   │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+### Admin Panel - Code Activity Log
+
+**Location:** Admin Panel → Codes → Activity Log (PHOTON System)
+
+**This SPECIAL TAB shows all code-related activities:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ PHOTON CODE ACTIVITY LOG                                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ Date Range: [Last 30 Days ▼]  Export: [CSV] [Excel]          │
+│                                                                 │
+│ Filters:                                                        │
+│ ☐ Code Generations  ☐ Code Redemptions  ☐ Failed Attempts     │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ Dec 5, 2025 14:32:15                                           │
+│ ✓ CODE REDEEMED                                                │
+│ Code: PHOTON-A7F2-K9M3-V5X1                                    │
+│ Redeemed by: Character_Name (User_ID: 12345)                   │
+│ Granted: 30 days PRO + Early Adopter badge                     │
+│ IP Address: 192.168.1.1                                        │
+│                                                                 │
+│ Dec 5, 2025 14:15:08                                           │
+│ ⚙️ CODE GENERATED                                              │
+│ Code: PHOTON-A7F2-K9M3-V5X1                                    │
+│ Generated by: Admin_Name (Admin_ID: 1)                         │
+│ Type: PRO + Badge                                              │
+│ Settings: 5 max uses, never expires                            │
+│ Note: "Fanfest 2025 Giveaway"                                  │
+│                                                                 │
+│ Dec 4, 2025 16:45:12                                           │
+│ ⚠️ FAILED REDEMPTION ATTEMPT                                   │
+│ Code: PHOTON-XXXX-XXXX-XXXX (invalid)                         │
+│ Attempted by: Some_User (User_ID: 67890)                      │
+│ Reason: Invalid code format                                    │
+│ IP Address: 192.168.1.3                                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Code System Database Schema
+
+**Activation Codes Table:**
+```sql
+CREATE TABLE photon_activation_codes (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  code VARCHAR(24) UNIQUE NOT NULL,  -- PHOTON-XXXX-XXXX-XXXX
+  type ENUM('pro', 'badge', 'both') NOT NULL,
+  
+  -- PRO details
+  pro_duration_days INT DEFAULT 0,
+  pro_duration_hours INT DEFAULT 0,
+  pro_duration_minutes INT DEFAULT 0,
+  
+  -- Badge details (JSON array of badge IDs)
+  badge_ids JSON,
+  
+  -- Usage limits
+  max_redemptions INT DEFAULT 1,  -- 0 = unlimited
+  times_redeemed INT DEFAULT 0,
+  
+  -- Validity
+  expires_at TIMESTAMP NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  
+  -- Metadata
+  internal_note VARCHAR(255),
+  created_by INT,  -- Admin user ID
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (created_by) REFERENCES users(id)
+);
+```
+
+**Code Redemptions Table:**
+```sql
+CREATE TABLE photon_code_redemptions (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  code_id INT NOT NULL,
+  user_id INT NOT NULL,
+  character_id INT,
+  
+  -- What was granted
+  pro_days_granted INT,
+  pro_hours_granted INT,
+  pro_minutes_granted INT,
+  badges_granted JSON,
+  
+  -- Metadata
+  redeemed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  ip_address VARCHAR(45),
+  user_agent TEXT,
+  
+  FOREIGN KEY (code_id) REFERENCES photon_activation_codes(id),
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  UNIQUE KEY unique_user_code (user_id, code_id)
+);
+```
+
+**Code Activity Log Table:**
+```sql
+CREATE TABLE photon_code_activity_log (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  activity_type ENUM('generated', 'redeemed', 'modified', 'deactivated', 'failed_redemption') NOT NULL,
+  code_id INT,
+  code_string VARCHAR(24),
+  
+  -- Actor
+  actor_id INT,
+  actor_type ENUM('admin', 'user') NOT NULL,
+  
+  -- Details
+  details JSON,
+  
+  -- Metadata
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  ip_address VARCHAR(45),
+  
+  FOREIGN KEY (code_id) REFERENCES photon_activation_codes(id),
+  FOREIGN KEY (actor_id) REFERENCES users(id)
+);
+```
+
+---
+
+### Code Generation Logic
+
+**Encoding Function (Pseudo-code):**
+
+```javascript
+function generatePhotonCode(config) {
+  // config = { type, proDays, proHours, proMinutes, badgeIds, maxRedemptions }
+  
+  // Character 1-2: Type identifier
+  let typePrefix = '';
+  if (config.type === 'pro') typePrefix = 'A';
+  else if (config.type === 'badge') typePrefix = 'B';
+  else if (config.type === 'both') typePrefix = 'C';
+  
+  // Character 3-6: PRO duration encoded
+  const totalMinutes = (config.proDays * 24 * 60) + (config.proHours * 60) + config.proMinutes;
+  const durationEncoded = encodeToBase32(totalMinutes, 4);
+  
+  // Character 7-9: Badge IDs encoded
+  const badgeEncoded = encodeBadgeIds(config.badgeIds, 3);
+  
+  // Character 10-11: Max redemptions encoded
+  const redemptionsEncoded = encodeToBase32(config.maxRedemptions, 2);
+  
+  // Character 12: Checksum
+  const dataString = typePrefix + durationEncoded + badgeEncoded + redemptionsEncoded;
+  const checksum = calculateChecksum(dataString);
+  
+  // Combine and format
+  const fullCode = typePrefix + durationEncoded + badgeEncoded + redemptionsEncoded + checksum;
+  const formatted = `PHOTON-${fullCode.substring(0,4)}-${fullCode.substring(4,8)}-${fullCode.substring(8,12)}`;
+  
+  return formatted;
+}
+
+function encodeToBase32(number, length) {
+  const charset = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';  // No 0,1,I,L,O
+  let encoded = '';
+  
+  for (let i = 0; i < length; i++) {
+    encoded = charset[number % 32] + encoded;
+    number = Math.floor(number / 32);
+  }
+  
+  return encoded.padStart(length, '2');
+}
+
+function calculateChecksum(data) {
+  let sum = 0;
+  for (let i = 0; i < data.length; i++) {
+    sum += data.charCodeAt(i) * (i + 1);
+  }
+  return encodeToBase32(sum % 32, 1);
+}
+```
+
+---
+
+## 5. BADGE SYSTEM & USER MANAGEMENT
+
+### Overview
+Comprehensive badge system with admin grants, code redemptions, and achievement unlocks. Badges display in LEFT sidebar (top 3) and on shareable session cards.
+
+### Badge Implementation
+
+**Use Lucide React Icons with Rarity Color Coding:**
+
+```javascript
+const BADGE_RARITY_COLORS = {
+  legendary: '#FFD700',  // Gold
+  epic: '#9C27B0',       // Purple
+  rare: '#2196F3',       // Blue
+  uncommon: '#4CAF50'    // Green
+};
+
+const BADGE_ICONS = {
+  'early_adopter': 'Trophy',
+  'beta_tester': 'Award',
+  'mining_master': 'Pickaxe',
+  'session_veteran': 'Clock',
+  'isk_billionaire': 'DollarSign',
+  // etc...
+};
+```
+
+**Badge Display Component:**
+```jsx
+import { Trophy, Award, Medal, Shield, Star, Crown } from 'lucide-react';
+
+function BadgeIcon({ badge }) {
+  const Icon = BADGE_ICONS[badge.slug] || Trophy;
+  const color = BADGE_RARITY_COLORS[badge.rarity];
+  
+  return (
+    <div className="badge-icon" title={`${badge.name} (${badge.rarity})`}>
+      <Icon size={24} color={color} />
+    </div>
+  );
+}
+```
+
+**Make System Flexible for Future Icon Replacement:**
+```javascript
+// Badge model should support both icon types
+{
+  id: 1,
+  name: "Early Adopter",
+  rarity: "rare",
+  icon_type: "lucide", // or "custom"
+  icon_value: "Trophy", // Lucide icon name or image URL
+  // ... other fields
+}
+```
+
+---
+
+### Badge Types & Rarity
+
+**Rarity Tiers:**
+1. **Legendary** - Gold (#FFD700)
+2. **Epic** - Purple (#9C27B0)
+3. **Rare** - Blue (#2196F3)
+4. **Uncommon** - Green (#4CAF50)
+
+**Special Event Badges (Rare tier):**
+- Early Adopter
+- Beta Tester
+- Fanfest Attendee (future)
+- Tournament Winner (future)
+
+---
+
+### Badge Database Schema
+
+**Badges Table:**
+```sql
+CREATE TABLE badges (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  slug VARCHAR(100) UNIQUE NOT NULL,
+  description TEXT,
+  rarity ENUM('legendary', 'epic', 'rare', 'uncommon') NOT NULL,
+  
+  -- Icon (flexible for future)
+  icon_type ENUM('lucide', 'custom') DEFAULT 'lucide',
+  icon_value VARCHAR(255),  -- Lucide icon name OR image URL
+  
+  -- Unlock conditions
+  unlockable_via_achievement BOOLEAN DEFAULT FALSE,
+  achievement_criteria JSON,
+  
+  -- Display
+  display_order INT DEFAULT 0,
+  is_visible BOOLEAN DEFAULT TRUE,
+  
+  -- Metadata
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+**User Badges Table:**
+```sql
+CREATE TABLE user_badges (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  badge_id INT NOT NULL,
+  
+  -- How obtained
+  granted_via ENUM('admin', 'code', 'achievement') NOT NULL,
+  granted_by INT,  -- Admin ID if manually granted
+  granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  -- Display preferences
+  is_showcased BOOLEAN DEFAULT TRUE,
+  showcase_order INT DEFAULT 0,
+  
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (badge_id) REFERENCES badges(id),
+  FOREIGN KEY (granted_by) REFERENCES users(id),
+  UNIQUE KEY unique_user_badge (user_id, badge_id)
+);
+```
+
+**Badge Activity Log:**
+```sql
+CREATE TABLE badge_activity_log (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  activity_type ENUM('granted', 'revoked', 'achievement_unlocked') NOT NULL,
+  badge_id INT NOT NULL,
+  user_id INT NOT NULL,
+  
+  -- Actor
+  admin_id INT,
+  
+  -- Details
+  grant_method ENUM('admin', 'code', 'achievement'),
+  notes TEXT,
+  
+  -- Metadata
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (badge_id) REFERENCES badges(id),
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (admin_id) REFERENCES users(id)
+);
+```
+
+---
+
+### Admin Panel - User Management
+
+**Location:** Admin Panel → Users → Manage Users
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ USER MANAGEMENT                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ Search: [____________] 🔍  [Character/Email/ID]                │
+│                                                                 │
+│ Filters:                                                        │
+│ ☐ PRO Users         ☐ Has Badges                              │
+│ ☐ Free Users        ☐ Early Adopters                          │
+│ ☐ Recent (30 days)  ☐ Beta Testers                            │
+│                                                                 │
+│ Sort by: [Newest ▼]                                            │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ [☐ Select All]  Bulk: [Grant Badge ▼] [Export CSV]           │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ ☐ Character Name 1                                             │
+│   Email: user1@email.com  |  ID: 12345                        │
+│   PRO: Yes (expires Jan 15, 2026)                             │
+│   Badges: 🏆 Early Adopter  ⭐ Epic  🎖️ Rare               │
+│   Registered: Nov 1, 2025  |  Last: 2 hours ago               │
+│   └─ [View] [Grant Badge] [Manage PRO] [Sessions]            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Grant Badge Modal (Single User)
+
+```
+┌─────────────────────────────────────────────┐
+│ GRANT BADGE TO: Character Name 1            │
+├─────────────────────────────────────────────┤
+│                                             │
+│ Select Badge: *                             │
+│                                             │
+│ ○ 🏆 Early Adopter (Rare)                  │
+│ ○ 🎖️ Beta Tester (Rare)                   │
+│ ○ ⭐ Legendary Badge                        │
+│ ○ 💎 Epic Badge                             │
+│ ○ 🔷 Rare Badge                             │
+│ ○ 🔸 Uncommon Badge                         │
+│                                             │
+│ Internal Note (optional):                   │
+│ [_________________________________]         │
+│                                             │
+│ [ Grant Badge ]  [ Cancel ]                 │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+### Grant Badge Modal (Bulk)
+
+```
+┌─────────────────────────────────────────────┐
+│ BULK GRANT BADGE                            │
+├─────────────────────────────────────────────┤
+│                                             │
+│ Selected Users: 15                          │
+│                                             │
+│ Character Name 1, Character Name 2,         │
+│ Character Name 3, ... and 12 more           │
+│                                             │
+│ Select Badge: [Early Adopter (Rare) ▼]    │
+│                                             │
+│ Internal Note:                              │
+│ [_________________________________]         │
+│                                             │
+│ ⚠️ This action cannot be undone.           │
+│                                             │
+│ [ Grant to All ]  [ Cancel ]                │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+### Badge Display - Left Sidebar Footer
+
+**When Expanded:**
+
+```
+┌─────────────────────┐
+│                     │
+│  [Character         │
+│   Avatar]           │
+│                     │
+│ Character Name      │
+│                     │
+│ 🏆 🎖️ ⭐          │ ← Top 3 badges
+│                     │
+│ [Logout]            │
+│                     │
+└─────────────────────┘
+```
+
+**Badge Tooltip on Hover:**
+```
+┌─────────────────────────┐
+│ 🏆 Early Adopter        │
+│ Rarity: Rare            │
+│ Granted: Nov 1, 2025    │
+└─────────────────────────┘
+```
+
+---
+
+### Badge Display - Shareable Cards
+
+**On /share/:id pages:**
+
+```
+┌─────────────────────────────────────────────┐
+│ CHARACTER NAME'S SESSION                    │
+│ 🏆 🎖️ ⭐                                   │ ← Top 3 badges
+├─────────────────────────────────────────────┤
+│                                             │
+│ Session Duration: 2 hours 35 minutes        │
+│ ISK Earned: 125,000,000                     │
+│ Efficiency: 48.3M ISK/hour                  │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+### Achievement System
+
+**Example Achievements:**
+
+```javascript
+const BADGE_ACHIEVEMENTS = {
+  'mining_enthusiast': {
+    badge_id: 3,
+    criteria: {
+      total_ore_mined_m3: 100000
+    }
+  },
+  'mining_master': {
+    badge_id: 4,
+    criteria: {
+      total_ore_mined_m3: 1000000
+    }
+  },
+  'session_veteran': {
+    badge_id: 5,
+    criteria: {
+      total_sessions: 100
+    }
+  },
+  'isk_millionaire': {
+    badge_id: 6,
+    criteria: {
+      total_isk_earned: 100000000
+    }
+  },
+  'isk_billionaire': {
+    badge_id: 7,
+    criteria: {
+      total_isk_earned: 1000000000
+    }
+  }
+};
+```
+
+**Achievement Check Logic:**
+
+```javascript
+async function checkBadgeAchievements(userId) {
+  const userStats = await getUserStats(userId);
+  
+  for (const [key, achievement] of Object.entries(BADGE_ACHIEVEMENTS)) {
+    const hasBadge = await userHasBadge(userId, achievement.badge_id);
+    if (hasBadge) continue;
+    
+    let criteriaMet = true;
+    for (const [stat, required] of Object.entries(achievement.criteria)) {
+      if (userStats[stat] < required) {
+        criteriaMet = false;
+        break;
+      }
+    }
+    
+    if (criteriaMet) {
+      await grantBadge(userId, achievement.badge_id, 'achievement');
+      await notifyUserBadgeUnlocked(userId, achievement.badge_id);
+    }
+  }
+}
+```
+
+---
+
+### Initial Badge Setup
+
+**Pre-populate these badges:**
+
+```sql
+INSERT INTO badges (name, slug, description, rarity, icon_type, icon_value, unlockable_via_achievement) VALUES
+('Early Adopter', 'early_adopter', 'First users of PHOTON', 'rare', 'lucide', 'Trophy', FALSE),
+('Beta Tester', 'beta_tester', 'Participated in beta testing', 'rare', 'lucide', 'Award', FALSE),
+('Mining Enthusiast', 'mining_enthusiast', 'Mined over 100,000 m³', 'uncommon', 'lucide', 'Pickaxe', TRUE),
+('Mining Master', 'mining_master', 'Mined over 1 million m³', 'epic', 'lucide', 'Gem', TRUE),
+('Session Veteran', 'session_veteran', 'Completed 100 sessions', 'rare', 'lucide', 'Clock', TRUE),
+('ISK Millionaire', 'isk_millionaire', 'Earned 100M ISK', 'uncommon', 'lucide', 'Coins', TRUE),
+('ISK Billionaire', 'isk_billionaire', 'Earned 1B ISK', 'legendary', 'lucide', 'Crown', TRUE);
+```
+
+---
+
+## 6. IMPLEMENTATION PHASES
+
+### Phase 1: Foundation (Days 1-3)
+**CRITICAL - Must Complete First**
+
+**Tasks:**
+- [ ] Application rebranding (RAT TRACKER → PHOTON)
+  - All code references
+  - UI elements
+  - Documentation
+  - localStorage keys
+  - Database table prefixes (if needed)
+  - **Add version number display**
+    - Add "PHOTON v0.1.0-dev | In Development" to dashboard
+    - Place in bottom right corner or footer
+    - Small, muted text (not intrusive)
+    - Should be visible but not distracting
+
+- [ ] Database schema updates
+  - `photon_activation_codes` table
+  - `photon_code_redemptions` table
+  - `photon_code_activity_log` table
+  - `badges` table
+  - `user_badges` table
+  - `badge_activity_log` table
+
+- [ ] Create LEFT sidebar structure
+  - New sidebar component on left
+  - Navigation items
+  - Character footer section
+  - Toggle functionality
+  - Do NOT touch existing right sidebar
+
+**⚠️ CHECKPOINT:** 
+- App loads with PHOTON branding
+- Database tables created
+- Left sidebar appears and can toggle
+- Right sidebar untouched
+
+**Status Update Required:** Provide brief summary of completion
+
+---
+
+### Phase 2: Left Sidebar Completion (Days 4-6)
+**HIGH PRIORITY**
+
+**Tasks:**
+- [ ] Complete left sidebar functionality
+  - Animations (300ms open, 250ms close)
+  - Desktop responsive behavior
+  - Mobile overlay mode with backdrop
+  - State persistence (localStorage)
+  - Accessibility features (ARIA, keyboard nav)
+
+- [ ] Character footer in left sidebar
+  - Avatar display
+  - Character name
+  - Top 3 badge slots (placeholder for now)
+  - Logout button
+
+- [ ] Navigation item active states
+  - Highlight current page
+  - Proper routing
+  - Icon + text layout
+
+- [ ] **CRITICAL: Header Cleanup**
+  - Move ALL header items to left sidebar:
+    * Theme selector button → Theme Selector item in sidebar (with Palette icon)
+    * Mining tab button → Mining item (already in main nav)
+    * PRO button → PRO item in sidebar (with Star icon)
+    * User profile button → Character item and footer avatar (already in sidebar)
+    * Export button → Export item in sidebar (with Download icon)
+    * Admin shield → Admin Panel item in sidebar (Shield icon, admin-only)
+  - **REMOVE these items from header after moving to sidebar**
+  - Test that all moved items work correctly from sidebar
+  - Verify header is clean (only essential items like logo/branding remain)
+
+**⚠️ CHECKPOINT:**
+- Left sidebar fully functional
+- Smooth animations work
+- Mobile overlay works
+- State persists across sessions
+- Accessibility compliant
+- ALL header items moved to sidebar
+- Header is cleaned up (items removed)
+- All moved items work from sidebar
+
+**Status Update Required:** Confirm sidebar complete AND header cleanup done
+
+---
+
+### Phase 3: Theme System (Days 7-10)
+**HIGH PRIORITY**
+
+**Tasks:**
+- [ ] Theme infrastructure
+  - CSS variable system
+  - Theme storage (localStorage)
+  - Theme switching function
+  - 300ms transition between themes
+
+- [ ] Implement FREE themes (7 total)
+  - Light (default)
+  - Dark (default)
+  - Caldari State
+  - Amarr Empire
+  - Gallente Federation
+  - Minmatar Republic
+  - CONCORD
+
+- [ ] Theme selector UI
+  - Grid layout with cards
+  - CSS color swatch previews
+  - Search and filter
+  - Apply button
+
+**⚠️ CHECKPOINT:**
+- All 7 free themes working
+- Theme selector functional
+- Themes persist across sessions
+- Smooth transitions
+- All pages styled correctly
+
+**Status Update Required:** Confirm free themes complete
+
+---
+
+### Phase 4: PRO Themes (Days 11-13)
+**HIGH PRIORITY**
+
+**Tasks:**
+- [ ] Implement PRO-exclusive themes (8 total)
+  - Triglavian Collective
+  - Guristas Pirates
+  - Angel Cartel
+  - Blood Raiders
+  - Jove Empire
+  - Sleepers/Drifters
+  - Sisters of EVE
+  - ORE
+
+- [ ] Theme access control
+  - PRO check for locked themes
+  - "Upgrade to PRO" prompts on locked themes
+  - Lock icon/badge on PRO themes
+
+- [ ] Enhanced theme selector
+  - PRO badge display
+  - Unlock prompts
+  - Preview for locked themes (grayed out)
+
+**⚠️ CHECKPOINT:**
+- All 15 themes implemented
+- PRO access control working
+- Free users see locked PRO themes
+- PRO users can access all themes
+
+**Status Update Required:** Confirm all themes complete
+
+---
+
+### Phase 5: Code Generation System (Days 14-17)
+**HIGH PRIORITY**
+
+**Tasks:**
+- [ ] Code generation backend
+  - Encoding function (PHOTON-XXXX-XXXX-XXXX)
+  - Decoding function
+  - Validation logic
+  - Database operations
+  - Keep existing code system intact
+
+- [ ] Admin code generation UI
+  - Form interface (type, duration, badges, limits)
+  - Precise days/hours/minutes input
+  - Multiple badge selection
+  - Max redemptions setting
+  - Expiration date picker
+  - Internal notes
+  - Code preview on generation
+  - Batch generation option
+
+- [ ] Code management UI
+  - List all codes
+  - Search and filter
+  - View code details
+  - Deactivate/delete codes
+
+**⚠️ CHECKPOINT:**
+- Admins can generate PHOTON codes
+- Encoding/decoding works correctly
+- Codes stored in database
+- Admin can view all codes
+- Old code system still works
+
+**Status Update Required:** Confirm code generation complete
+
+---
+
+### Phase 6: Code Redemption & Activity Log (Days 18-20)
+**HIGH PRIORITY**
+
+**Tasks:**
+- [ ] User code redemption
+  - Redemption page/interface
+  - Code input (PHOTON-XXXX-XXXX-XXXX format)
+  - Validation
+  - Success/error messages
+  - Previously redeemed codes list
+
+- [ ] Code redemption logic
+  - Validate code format
+  - Check code exists and is active
+  - Check expiration
+  - Check redemption limit
+  - Prevent double redemption
+  - Grant PRO time (extend existing)
+  - Grant badges
+
+- [ ] Code activity log (SPECIAL TAB)
+  - Log all code generations
+  - Log all code redemptions
+  - Log failed redemption attempts
+  - Show who generated what
+  - Show who redeemed what
+  - Timestamps and IP addresses
+  - Search and filter
+  - Export to CSV
+
+**⚠️ CHECKPOINT:**
+- Users can redeem codes
+- PRO time is granted correctly
+- Badges are granted correctly
+- Activity log shows all activities
+- Failed attempts logged
+
+**Status Update Required:** Confirm redemption system complete
+
+---
+
+### Phase 7: Badge System - Backend (Days 21-23)
+**HIGH PRIORITY**
+
+**Tasks:**
+- [ ] Badge database setup
+  - Create initial badges (Early Adopter, Beta Tester, etc.)
+  - Lucide icon assignments
+  - Rarity color coding
+  - Achievement criteria setup
+
+- [ ] Badge granting logic
+  - Admin single grant
+  - Admin bulk grant
+  - Code redemption grant
+  - Achievement unlock grant
+
+- [ ] Badge activity logging
+  - Log all badge grants
+  - Log who granted to whom
+  - Log grant method (admin/code/achievement)
+  - Timestamps and notes
+
+**⚠️ CHECKPOINT:**
+- Badges exist in database
+- Can grant badges via admin panel
+- Badge activity log working
+- Achievement criteria configured
+
+**Status Update Required:** Confirm badge backend complete
+
+---
+
+### Phase 8: Badge System - Frontend (Days 24-26)
+**HIGH PRIORITY**
+
+**Tasks:**
+- [ ] Admin badge management UI
+  - User filtering and search
+  - Single badge grant modal
+  - Bulk badge grant modal
+  - Badge activity log view
+
+- [ ] Badge display
+  - Left sidebar footer (top 3 badges with Lucide icons)
+  - Badge tooltips (name + rarity on hover)
+  - Shareable card integration
+  - User badge collection page
+
+- [ ] Achievement system
+  - Criteria checking logic
+  - Automatic badge unlocking
+  - User notifications on unlock
+
+**⚠️ CHECKPOINT:**
+- Admins can grant badges (single & bulk)
+- Badges display in left sidebar
+- Badges display on shareable cards
+- Tooltips show name and rarity
+- Achievements auto-unlock badges
+
+**Status Update Required:** Confirm badge display complete
+
+---
+
+### Phase 9: Testing & Bug Fixes (Days 27-30)
+**CRITICAL**
+
+**Tasks:**
+- [ ] Comprehensive testing
+  - All themes on all pages
+  - Left sidebar on all devices
+  - Code generation/redemption flow
+  - Badge granting (manual and achievement)
+  - Theme switching performance
+  - Mobile responsiveness
+
+- [ ] Cross-browser testing
+  - Chrome
+  - Firefox
+  - Safari
+  - Edge
+
+- [ ] Accessibility testing
+  - Keyboard navigation
+  - Screen readers
+  - ARIA labels
+  - Contrast ratios (WCAG AA)
+
+- [ ] Performance optimization
+  - Theme switching speed
+  - Animation smoothness (60fps)
+  - Database query optimization
+  - Mobile performance
+
+- [ ] Bug fixes
+  - Address all issues found
+  - Edge case handling
+  - Error handling improvements
+
+**⚠️ CHECKPOINT:**
+- All features tested and working
+- No critical bugs
+- Performance is good
+- Accessibility compliant
+- Works on all major browsers
+
+**Status Update Required:** Confirm testing complete
+
+---
+
+### Phase 10: Documentation & Polish (Days 31-33)
+**ENHANCEMENT**
+
+**Tasks:**
+- [ ] Documentation
+  - Admin guide for code generation
+  - Admin guide for badge management
+  - User guide for themes
+  - Developer documentation for code system
+  - Database schema documentation
+
+- [ ] Polish and refinements
+  - UI tweaks
+  - Animation refinements
+  - Text improvements
+  - Visual consistency check
+
+- [ ] Final review
+  - Feature completeness check
+  - Quality assurance
+  - Performance final check
+
+**⚠️ FINAL CHECKPOINT:**
+- All documentation complete
+- All features polished
+- Ready for production
+
+**Status Update Required:** Confirm project complete
+
+---
+
+## SUCCESS CRITERIA CHECKLIST
+
+### Application Rebranding ✓
+- [ ] No "RAT TRACKER" references remain
+- [ ] All "PHOTON" branding in place
+- [ ] Database updated
+- [ ] All pages load correctly
+- [ ] Version number displayed on dashboard (v0.1.0-dev | In Development)
+
+### Left Sidebar ✓
+- [ ] Opens/closes smoothly (300ms/250ms)
+- [ ] Works on desktop and mobile
+- [ ] State persists
+- [ ] Keyboard accessible
+- [ ] Top 3 badges in footer
+- [ ] Right sidebar untouched
+
+### Theme System ✓
+- [ ] 15 themes implemented
+- [ ] 7 FREE themes accessible to all
+- [ ] 8 PRO themes locked for non-PRO
+- [ ] Theme switching < 100ms
+- [ ] WCAG AA compliance
+- [ ] CSS color swatch previews
+- [ ] Works on all pages
+
+### Code System ✓
+- [ ] Old code system still works
+- [ ] New PHOTON codes generate correctly
+- [ ] Precise duration control (days/hours/minutes)
+- [ ] Multiple badges per code
+- [ ] Max redemption limits work
+- [ ] Codes can expire
+- [ ] Users can redeem codes
+- [ ] Activity log shows all activities
+- [ ] Failed attempts logged
+- [ ] Both systems visible in admin panel
+
+### Badge System ✓
+- [ ] Lucide icons with rarity colors
+- [ ] Admins can grant badges (single & bulk)
+- [ ] Badges display in left sidebar (top 3)
+- [ ] Badges display on shareable cards
+- [ ] Tooltips show name and rarity
+- [ ] Achievement unlocks work
+- [ ] Badge activity log tracks all grants
+- [ ] System flexible for icon replacement
+
+### Overall Quality ✓
+- [ ] No critical bugs
+- [ ] Fast performance (< 2s load)
+- [ ] Smooth 60fps animations
+- [ ] Works on Chrome/Firefox/Safari/Edge
+- [ ] Mobile responsive
+- [ ] Accessible to screen readers
+- [ ] All features documented
+
+---
+
+## IMPLEMENTATION REMINDERS
+
+### ⚠️ WORK SYSTEMATICALLY:
+1. Complete each phase fully
+2. Test after each phase
+3. Provide status updates
+4. Don't skip ahead
+5. Quality over speed
+
+### ⚠️ TWO-SIDEBAR SYSTEM:
+- LEFT sidebar = NEW (navigation + badges)
+- RIGHT sidebar = EXISTING (don't touch)
+
+### ⚠️ TWO-CODE SYSTEM:
+- OLD system = Keep working
+- NEW PHOTON system = Add alongside
+
+### ⚠️ BADGE ICONS:
+- Use Lucide React icons
+- Color by rarity
+- Make system flexible for future custom images
+
+### ⚠️ THEME PREVIEWS:
+- CSS color swatches (3-4 circles)
+- No preview images needed
+
+---
+
+## FINAL NOTES
+
+**This is a systematic, phase-by-phase implementation. Work through each phase completely before moving to the next. Provide brief status updates after each major milestone. If you encounter blockers or need clarification, STOP and ASK.**
+
+**Transform the app into PHOTON with quality and care. Good luck! ⚡ o7**
+
+---
+
+*End of Implementation Document*

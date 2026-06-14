@@ -1,0 +1,1565 @@
+================================================================================
+PHOTON - COMPLETE IMPLEMENTATION & VERIFICATION CHECKLIST
+Version 3.1 - Three-Part Checklist
+Date: December 5, 2025
+================================================================================
+
+⚠️ CRITICAL INSTRUCTIONS FOR REPLIT:
+
+This document has THREE parts:
+1. CRITICAL MISSING FEATURES - Fix these FIRST (highest priority)
+2. FULL IMPLEMENTATION CHECKLIST - Complete task-by-task guide
+3. VERIFICATION CHECKLIST - YES/NO confirmation of all features
+
+DO NOT mark this project as complete until:
+- ALL items in Part 1 are addressed
+- ALL items in Part 2 are checked off
+- ALL items in Part 3 answer "YES"
+
+If you cannot complete something, STOP and ASK the user for clarification.
+
+================================================================================
+PART A: CRITICAL MISSING FEATURES (FIX THESE FIRST)
+================================================================================
+
+The user has reported these features are MISSING or BROKEN. These are your
+TOP PRIORITY. Fix these before moving to other features.
+
+⚠️ PRIORITY 1: ADMIN CODE GENERATION SYSTEM
+
+The user CANNOT FIND the admin interface to generate PHOTON codes.
+
+[ ] CRITICAL: Create admin page for PHOTON code generation
+    - Must be accessible from Admin Panel
+    - Must have form to generate PHOTON-XXXX-XXXX-XXXX codes
+    - Must allow setting: PRO duration (days/hours/minutes)
+    - Must allow selecting: Multiple badges
+    - Must allow setting: Max redemptions (0 = unlimited)
+    - Must allow setting: Expiration date
+    - Must allow adding: Internal notes
+    - Must generate codes in format: PHOTON-XXXX-XXXX-XXXX
+
+[ ] CRITICAL: Create "Code Activity Log" tab in admin
+    - Must show ALL code generations (who made them, when)
+    - Must show ALL code redemptions (who redeemed, when)
+    - Must show FAILED redemption attempts
+    - Must be a separate tab/section, not buried
+    - Must be easily accessible from admin panel
+
+User says: "I still need the admin pro code features, or need to know where 
+they are located."
+
+ACTION REQUIRED: Either BUILD this feature OR tell user exactly where it is.
+
+---
+
+⚠️ PRIORITY 2: THEME SYSTEM NOT WORKING
+
+The user says: "I still need the new themes"
+
+[ ] CRITICAL: Verify all 7 FREE themes are implemented:
+    1. Light (default)
+    2. Dark (default)
+    3. Caldari State
+    4. Amarr Empire
+    5. Gallente Federation
+    6. Minmatar Republic
+    7. CONCORD
+
+[ ] CRITICAL: Verify all 8 PRO themes are implemented:
+    1. Triglavian Collective ⭐
+    2. Guristas Pirates ⭐
+    3. Angel Cartel ⭐
+    4. Blood Raiders ⭐
+    5. Jove Empire ⭐
+    6. Sleepers/Drifters ⭐
+    7. Sisters of EVE ⭐
+    8. ORE ⭐
+
+[ ] CRITICAL: Verify theme selector is accessible
+    - Can users open theme selector?
+    - Can users see all themes?
+    - Can users apply themes?
+    - Do theme changes persist?
+
+ACTION REQUIRED: If themes don't exist, BUILD them with exact color codes 
+from the implementation doc. If they exist, tell user WHERE the theme 
+selector is located.
+
+---
+
+⚠️ PRIORITY 3: UI BUGS ON PREVIEW PAGE
+
+[ ] BUG FIX: Left sidebar toggle button doesn't open sidebar
+    - Currently: Button only closes sidebar when it's open
+    - Required: Button must OPEN sidebar when closed AND close when open
+    - Test both directions
+
+[ ] BUG FIX: Remove large "PHOTON" tile from preview page top
+    - There's a large banner/tile at top of preview page
+    - Remove it - keep header clean and minimal
+
+[ ] BUG FIX: Standardize button sizes on preview page
+    - Three buttons: "Customize Tiles", "Reset Layout", "Unlock to Edit"
+    - Make them uniform: Same height, same padding, same font size
+    - Consistent styling (colors can differ but proportions must match)
+
+---
+
+⚠️ PRIORITY 4: LEFT SIDEBAR MUST HAVE ALL ITEMS
+
+[ ] VERIFY: Left sidebar has Theme Selector button (Palette icon)
+[ ] VERIFY: Left sidebar has Export button (Download icon)
+[ ] VERIFY: Left sidebar has PRO button (Star icon)
+[ ] VERIFY: Left sidebar has Admin Panel button (Shield icon)
+[ ] VERIFY: Left sidebar footer shows top 3 badges with tooltips
+
+---
+
+⚠️ PRIORITY 5: HEADER CLEANUP
+
+[ ] VERIFY: Header no longer has theme selector button
+[ ] VERIFY: Header no longer has mining tab button
+[ ] VERIFY: Header no longer has PRO button
+[ ] VERIFY: Header no longer has user profile button
+[ ] VERIFY: Header no longer has export button
+[ ] VERIFY: Header no longer has admin shield icon
+[ ] VERIFY: Header is clean and minimal (only logo/branding)
+
+================================================================================
+PART B: FULL IMPLEMENTATION CHECKLIST
+================================================================================
+
+Complete these tasks in order. Check off each item as you finish it.
+
+--------------------------------------------------------------------------------
+SECTION 1: APPLICATION REBRANDING
+--------------------------------------------------------------------------------
+
+[ ] 1.1   Find and replace ALL "RAT TRACKER" with "PHOTON" in code
+[ ] 1.2   Find and replace ALL "rat-tracker" with "photon" in filenames
+[ ] 1.3   Find and replace ALL "rattracker" with "photon" in variables
+[ ] 1.4   Update package.json: Change app name to "PHOTON"
+[ ] 1.5   Update browser tab title: Should say "PHOTON"
+[ ] 1.6   Update all page headers: Should say "PHOTON"
+[ ] 1.7   Update localStorage keys: rattracker_ → photon_
+[ ] 1.8   Update environment variables: RAT_TRACKER → PHOTON
+[ ] 1.9   Update database table names/prefixes if applicable
+[ ] 1.10  Update meta tags (title, description) to say "PHOTON"
+[ ] 1.11  Update email templates to say "PHOTON"
+[ ] 1.12  Update shareable cards (/share/:id) to say "PHOTON"
+[ ] 1.13  Update documentation/README to say "PHOTON"
+
+VERSION DISPLAY:
+[ ] 1.14  Add version number to dashboard
+[ ] 1.15  Format: "v0.1.0-dev | In Development" OR "PHOTON v0.1.0 (Beta)"
+[ ] 1.16  Location: Bottom right corner of dashboard OR footer
+[ ] 1.17  Style: Small font (11px), muted color (60% opacity), monospace
+[ ] 1.18  Non-intrusive: Doesn't interfere with main UI
+[ ] 1.19  Theme-aware: Respects current theme colors
+
+STATUS: ___/19 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 2: LEFT SIDEBAR NAVIGATION (NEW - DO NOT TOUCH RIGHT SIDEBAR)
+--------------------------------------------------------------------------------
+
+⚠️ CRITICAL: Create NEW sidebar on LEFT. Do NOT modify existing right sidebar.
+
+STRUCTURE:
+[ ] 2.1   Create new left sidebar component
+[ ] 2.2   Position: Fixed left side
+[ ] 2.3   Height: Full viewport (100vh)
+[ ] 2.4   Width collapsed: 60px
+[ ] 2.5   Width expanded: 240px
+[ ] 2.6   Z-index: Appropriate for overlay on mobile
+
+TOGGLE FUNCTIONALITY:
+[ ] 2.7   Add toggle button (hamburger menu icon)
+[ ] 2.8   Click to expand when collapsed
+[ ] 2.9   Click to collapse when expanded
+[ ] 2.10  Test: Opens when closed ⚠️ (USER REPORTED BUG)
+[ ] 2.11  Test: Closes when open
+
+ANIMATIONS:
+[ ] 2.12  Opening animation: 300ms duration
+[ ] 2.13  Opening easing: cubic-bezier(0.4, 0.0, 0.2, 1)
+[ ] 2.14  Closing animation: 250ms duration
+[ ] 2.15  Closing easing: cubic-bezier(0.4, 0.0, 0.2, 1)
+[ ] 2.16  Text fade-in delay: 50ms after width expansion
+[ ] 2.17  Text fade-out: Immediate on collapse
+
+STATE PERSISTENCE:
+[ ] 2.18  Store state in localStorage: 'photon_left_sidebar_state'
+[ ] 2.19  Values: 'expanded' or 'collapsed'
+[ ] 2.20  Remember state on page reload
+[ ] 2.21  Remember state across sessions
+
+NAVIGATION ITEMS (Main Section):
+[ ] 2.22  Dashboard - Home icon - Routes to /
+[ ] 2.23  Mining - Pickaxe icon - Routes to /mining
+[ ] 2.24  Loot Tracker - Treasure/Box icon - Routes to /loot
+[ ] 2.25  Sessions - Clock icon - Routes to /sessions
+[ ] 2.26  Character - User icon - Routes to /character
+[ ] 2.27  Export - Download icon - Opens export modal/dialog
+[ ] 2.28  Settings - Gear icon - Routes to /settings
+
+SPECIAL ACTION ITEMS:
+[ ] 2.29  Theme Selector - Palette icon - Opens theme modal ⚠️ PRIORITY
+[ ] 2.30  PRO - Star icon (gold if PRO active) - Routes to /pro
+[ ] 2.31  Admin Panel - Shield icon - Routes to /admin (admin only)
+[ ] 2.32  Admin Panel: Only visible to admin users
+
+FOOTER SECTION (Character Info):
+[ ] 2.33  Display character avatar
+[ ] 2.34  Display character name
+[ ] 2.35  Display top 3 badges (Lucide icons with rarity colors)
+[ ] 2.36  Badge tooltip on hover: Shows badge name
+[ ] 2.37  Badge tooltip on hover: Shows rarity level
+[ ] 2.38  Logout button
+
+COLLAPSED STATE:
+[ ] 2.39  When collapsed: Show icons only
+[ ] 2.40  When collapsed: Show tooltips on hover
+[ ] 2.41  When collapsed: Footer shows avatar only
+[ ] 2.42  When collapsed: Top badge visible
+
+DESKTOP RESPONSIVE:
+[ ] 2.43  Desktop (>768px): Sidebar pushes content
+[ ] 2.44  Desktop: Smooth content shift animation
+[ ] 2.45  Desktop: Remember user's preferred state
+
+MOBILE RESPONSIVE:
+[ ] 2.46  Mobile (<768px): Sidebar hidden by default
+[ ] 2.47  Mobile: Opens as overlay (doesn't push content)
+[ ] 2.48  Mobile: Semi-transparent backdrop (rgba(0,0,0,0.5))
+[ ] 2.49  Mobile: Click backdrop to close
+[ ] 2.50  Mobile: Swipe from left edge to open (optional)
+
+ACCESSIBILITY:
+[ ] 2.51  Keyboard navigation: Tab through items
+[ ] 2.52  Keyboard navigation: Enter to activate
+[ ] 2.53  Keyboard navigation: Escape to close
+[ ] 2.54  ARIA labels on all navigation items
+[ ] 2.55  ARIA role="navigation"
+[ ] 2.56  Focus indicators visible
+[ ] 2.57  Screen reader announcements for state changes
+[ ] 2.58  Respects prefers-reduced-motion
+
+ACTIVE STATE HIGHLIGHTING:
+[ ] 2.59  Current page highlighted in sidebar
+[ ] 2.60  Different background color for active item
+[ ] 2.61  Persists when sidebar collapsed
+
+RIGHT SIDEBAR VERIFICATION:
+[ ] 2.62  ⚠️ VERIFY: Right sidebar is UNTOUCHED
+[ ] 2.63  ⚠️ VERIFY: Right sidebar still works normally
+[ ] 2.64  ⚠️ VERIFY: Both sidebars can coexist
+
+STATUS: ___/64 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 3: HEADER CLEANUP
+--------------------------------------------------------------------------------
+
+⚠️ CRITICAL: Remove items from header AFTER verifying they're in left sidebar.
+
+VERIFY ITEMS IN LEFT SIDEBAR FIRST:
+[ ] 3.1   Theme selector button exists in left sidebar
+[ ] 3.2   Mining navigation exists in left sidebar
+[ ] 3.3   PRO button exists in left sidebar
+[ ] 3.4   Character/profile access exists in left sidebar
+[ ] 3.5   Export button exists in left sidebar
+[ ] 3.6   Admin shield/panel access exists in left sidebar
+
+REMOVE FROM HEADER:
+[ ] 3.7   Remove theme selector button from header
+[ ] 3.8   Remove mining tab button from header
+[ ] 3.9   Remove PRO button from header
+[ ] 3.10  Remove user profile button from header
+[ ] 3.11  Remove export button from header
+[ ] 3.12  Remove admin shield icon from header
+
+HEADER FINAL STATE:
+[ ] 3.13  Header contains: Application logo/branding only
+[ ] 3.14  Header may contain: Breadcrumbs (optional)
+[ ] 3.15  Header may contain: Critical notifications (optional)
+[ ] 3.16  Header is clean and minimal
+[ ] 3.17  Header doesn't duplicate sidebar functionality
+
+TEST FUNCTIONALITY:
+[ ] 3.18  Test: Can still change themes (from sidebar)
+[ ] 3.19  Test: Can still navigate to mining (from sidebar)
+[ ] 3.20  Test: Can still access PRO (from sidebar)
+[ ] 3.21  Test: Can still access profile (from sidebar)
+[ ] 3.22  Test: Can still export (from sidebar)
+[ ] 3.23  Test: Can still access admin panel (from sidebar)
+
+STATUS: ___/23 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 4: THEME SYSTEM - FREE THEMES
+--------------------------------------------------------------------------------
+
+⚠️ CRITICAL: User says themes are missing. Implement ALL 7 free themes.
+
+THEME INFRASTRUCTURE:
+[ ] 4.1   Set up CSS variable system using :root[data-theme="..."]
+[ ] 4.2   Create theme switching function
+[ ] 4.3   Store selected theme in localStorage: 'photon_selected_theme'
+[ ] 4.4   Apply 300ms transition when switching themes
+[ ] 4.5   All CSS variables use consistent naming convention
+
+FREE THEME 1: LIGHT (Default)
+[ ] 4.6   Implement Light theme
+[ ] 4.7   Light backgrounds, dark text
+[ ] 4.8   High contrast for readability
+[ ] 4.9   Test on all pages
+[ ] 4.10  WCAG AA compliance (4.5:1 contrast minimum)
+
+FREE THEME 2: DARK (Default)
+[ ] 4.11  Implement Dark theme
+[ ] 4.12  Dark backgrounds, light text
+[ ] 4.13  High contrast for readability
+[ ] 4.14  Test on all pages
+[ ] 4.15  WCAG AA compliance
+
+FREE THEME 3: CALDARI STATE
+[ ] 4.16  CSS variable: --caldari-primary: #4A5568 (Slate grey)
+[ ] 4.17  CSS variable: --caldari-secondary: #2C3E50 (Gunmetal)
+[ ] 4.18  CSS variable: --caldari-accent: #00A8FF (Electric blue)
+[ ] 4.19  CSS variable: --caldari-highlight: #00D9FF (Cyan glow)
+[ ] 4.20  CSS variable: --caldari-background: #1A202C (Dark charcoal)
+[ ] 4.21  CSS variable: --caldari-text: #F7FAFC (Clean white)
+[ ] 4.22  CSS variable: --caldari-text-secondary: #A0AEC0 (Muted blue-grey)
+[ ] 4.23  Apply to all UI elements
+[ ] 4.24  Test on all pages
+[ ] 4.25  WCAG AA compliance
+
+FREE THEME 4: AMARR EMPIRE
+[ ] 4.26  CSS variable: --amarr-primary: #D4AF37 (Imperial gold)
+[ ] 4.27  CSS variable: --amarr-secondary: #A52A2A (Deep crimson)
+[ ] 4.28  CSS variable: --amarr-accent: #FFD700 (Bright gold)
+[ ] 4.29  CSS variable: --amarr-sacred: #FAFAFA (Pure white)
+[ ] 4.30  CSS variable: --amarr-background: #2D1B00 (Dark brown)
+[ ] 4.31  CSS variable: --amarr-text: #FFD700 (Gold text)
+[ ] 4.32  CSS variable: --amarr-text-secondary: #D4AF37 (Muted gold)
+[ ] 4.33  Apply to all UI elements
+[ ] 4.34  Test on all pages
+[ ] 4.35  WCAG AA compliance
+
+FREE THEME 5: GALLENTE FEDERATION
+[ ] 4.36  CSS variable: --gallente-primary: #2E7D32 (Forest green)
+[ ] 4.37  CSS variable: --gallente-secondary: #00A86B (Emerald)
+[ ] 4.38  CSS variable: --gallente-accent: #00BCD4 (Cyan blue)
+[ ] 4.39  CSS variable: --gallente-highlight: #76FF03 (Bright lime)
+[ ] 4.40  CSS variable: --gallente-background: #0A1F1F (Dark green-black)
+[ ] 4.41  CSS variable: --gallente-text: #FAFAFA (Clean white)
+[ ] 4.42  CSS variable: --gallente-text-secondary: #81C784 (Light green)
+[ ] 4.43  Apply to all UI elements
+[ ] 4.44  Test on all pages
+[ ] 4.45  WCAG AA compliance
+
+FREE THEME 6: MINMATAR REPUBLIC
+[ ] 4.46  CSS variable: --minmatar-primary: #CD5C5C (Rust red)
+[ ] 4.47  CSS variable: --minmatar-secondary: #8B4513 (Weathered bronze)
+[ ] 4.48  CSS variable: --minmatar-accent: #FF6B35 (Burnt orange)
+[ ] 4.49  CSS variable: --minmatar-tribal: #A0826D (Earth tones)
+[ ] 4.50  CSS variable: --minmatar-background: #1A0F0A (Dark rust-brown)
+[ ] 4.51  CSS variable: --minmatar-text: #FFF8E7 (Warm white)
+[ ] 4.52  CSS variable: --minmatar-text-secondary: #D4A574 (Tan)
+[ ] 4.53  Apply to all UI elements
+[ ] 4.54  Test on all pages
+[ ] 4.55  WCAG AA compliance
+
+FREE THEME 7: CONCORD
+[ ] 4.56  CSS variable: --concord-primary: #0B3C5D (Navy blue)
+[ ] 4.57  CSS variable: --concord-secondary: #FFFFFF (White)
+[ ] 4.58  CSS variable: --concord-accent: #FFD700 (Gold)
+[ ] 4.59  CSS variable: --concord-warning: #FFFF00 (Yellow)
+[ ] 4.60  CSS variable: --concord-background: #F5F5F5 (Light grey)
+[ ] 4.61  CSS variable: --concord-text: #001F3F (Navy blue)
+[ ] 4.62  CSS variable: --concord-text-secondary: #5A6C7D (Muted blue)
+[ ] 4.63  Apply to all UI elements
+[ ] 4.64  Test on all pages
+[ ] 4.65  WCAG AA compliance
+
+STATUS: ___/65 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 5: THEME SYSTEM - PRO THEMES
+--------------------------------------------------------------------------------
+
+⚠️ CRITICAL: Implement all 8 PRO-exclusive themes with access control.
+
+PRO THEME 1: TRIGLAVIAN COLLECTIVE ⭐
+[ ] 5.1   CSS variable: --triglavian-primary: #0D0D0D (Deep black)
+[ ] 5.2   CSS variable: --triglavian-secondary: #B22222 (Blood red)
+[ ] 5.3   CSS variable: --triglavian-accent: #DC143C (Bright crimson)
+[ ] 5.4   CSS variable: --triglavian-energy: #FF4500 (Orange-red glow)
+[ ] 5.5   CSS variable: --triglavian-background: #000000 (Pure black)
+[ ] 5.6   CSS variable: --triglavian-text: #FFFFFF (White)
+[ ] 5.7   CSS variable: --triglavian-text-secondary: #FF6B6B (Light red)
+[ ] 5.8   Apply to all UI elements
+[ ] 5.9   Lock for non-PRO users
+[ ] 5.10  Test on all pages
+
+PRO THEME 2: GURISTAS PIRATES ⭐
+[ ] 5.11  CSS variable: --guristas-primary: #39FF14 (Lime green)
+[ ] 5.12  CSS variable: --guristas-secondary: #36454F (Dark grey)
+[ ] 5.13  CSS variable: --guristas-accent: #FF1493 (Hot pink)
+[ ] 5.14  CSS variable: --guristas-tech: #00FFFF (Cyan)
+[ ] 5.15  CSS variable: --guristas-background: #0A0A0A (Very dark grey)
+[ ] 5.16  CSS variable: --guristas-text: #FFFFFF (Bright white)
+[ ] 5.17  CSS variable: --guristas-text-secondary: #7FFF00 (Chartreuse)
+[ ] 5.18  Apply to all UI elements
+[ ] 5.19  Lock for non-PRO users
+[ ] 5.20  Test on all pages
+
+PRO THEME 3: ANGEL CARTEL ⭐
+[ ] 5.21  CSS variable: --angel-primary: #A52A2A (Deep red)
+[ ] 5.22  CSS variable: --angel-secondary: #0F0F0F (Black)
+[ ] 5.23  CSS variable: --angel-accent: #FF0000 (Bright red)
+[ ] 5.24  CSS variable: --angel-metal: #C0C0C0 (Silver chrome)
+[ ] 5.25  CSS variable: --angel-background: #000000 (Black)
+[ ] 5.26  CSS variable: --angel-text: #FFFFFF (White)
+[ ] 5.27  CSS variable: --angel-text-secondary: #FF6B6B (Light red)
+[ ] 5.28  Apply to all UI elements
+[ ] 5.29  Lock for non-PRO users
+[ ] 5.30  Test on all pages
+
+PRO THEME 4: BLOOD RAIDERS ⭐
+[ ] 5.31  CSS variable: --bloodraider-primary: #8B0000 (Blood red)
+[ ] 5.32  CSS variable: --bloodraider-secondary: #6B4423 (Dark gold/bronze)
+[ ] 5.33  CSS variable: --bloodraider-accent: #DC143C (Crimson)
+[ ] 5.34  CSS variable: --bloodraider-corrupt: #B8860B (Tarnished gold)
+[ ] 5.35  CSS variable: --bloodraider-background: #1A0000 (Black-red)
+[ ] 5.36  CSS variable: --bloodraider-text: #F5F5DC (Bone white)
+[ ] 5.37  CSS variable: --bloodraider-text-secondary: #CD5C5C (Indian red)
+[ ] 5.38  Apply to all UI elements
+[ ] 5.39  Lock for non-PRO users
+[ ] 5.40  Test on all pages
+
+PRO THEME 5: JOVE EMPIRE ⭐
+[ ] 5.41  CSS variable: --jove-primary: #6A1B9A (Deep purple)
+[ ] 5.42  CSS variable: --jove-secondary: #0D1F2D (Black with blue sheen)
+[ ] 5.43  CSS variable: --jove-accent: #9C27B0 (Electric violet)
+[ ] 5.44  CSS variable: --jove-tech: #B0C4DE (Silver/platinum)
+[ ] 5.45  CSS variable: --jove-background: #1A0033 (Dark purple-black)
+[ ] 5.46  CSS variable: --jove-text: #E0E0E0 (Luminous silver)
+[ ] 5.47  CSS variable: --jove-text-secondary: #BA68C8 (Light purple)
+[ ] 5.48  Apply to all UI elements
+[ ] 5.49  Lock for non-PRO users
+[ ] 5.50  Test on all pages
+
+PRO THEME 6: SLEEPERS/DRIFTERS ⭐
+[ ] 5.51  CSS variable: --sleeper-primary: #004D40 (Deep teal)
+[ ] 5.52  CSS variable: --sleeper-secondary: #263238 (Dark blue-grey)
+[ ] 5.53  CSS variable: --sleeper-accent: #00E5FF (Electric cyan)
+[ ] 5.54  CSS variable: --sleeper-ancient: #B8960B (Muted gold)
+[ ] 5.55  CSS variable: --sleeper-background: #0A1929 (Near-black blue)
+[ ] 5.56  CSS variable: --sleeper-text: #E0F7FA (Cyan-white)
+[ ] 5.57  CSS variable: --sleeper-text-secondary: #4DD0E1 (Light cyan)
+[ ] 5.58  Apply to all UI elements
+[ ] 5.59  Lock for non-PRO users
+[ ] 5.60  Test on all pages
+
+PRO THEME 7: SISTERS OF EVE ⭐
+[ ] 5.61  CSS variable: --sisters-primary: #FAFAFA (Pristine white)
+[ ] 5.62  CSS variable: --sisters-secondary: #B76E79 (Rose gold)
+[ ] 5.63  CSS variable: --sisters-accent: #4FC3F7 (Soft blue)
+[ ] 5.64  CSS variable: --sisters-sacred: #E8DED2 (Pearl)
+[ ] 5.65  CSS variable: --sisters-background: #ECEFF1 (Soft grey-blue)
+[ ] 5.66  CSS variable: --sisters-text: #424242 (Dark grey)
+[ ] 5.67  CSS variable: --sisters-text-secondary: #757575 (Medium grey)
+[ ] 5.68  Apply to all UI elements
+[ ] 5.69  Lock for non-PRO users
+[ ] 5.70  Test on all pages
+
+PRO THEME 8: ORE (OUTER RING EXCAVATIONS) ⭐
+[ ] 5.71  CSS variable: --ore-primary: #FFB300 (Industrial yellow)
+[ ] 5.72  CSS variable: --ore-secondary: #1A1A1A (Black)
+[ ] 5.73  CSS variable: --ore-accent: #FF6600 (Orange)
+[ ] 5.74  CSS variable: --ore-safety: #FFFFFF (White)
+[ ] 5.75  CSS variable: --ore-background: #2E2E2E (Dark grey)
+[ ] 5.76  CSS variable: --ore-text: #1A1A1A (Black on yellow)
+[ ] 5.77  CSS variable: --ore-text-secondary: #666666 (Medium grey)
+[ ] 5.78  Apply to all UI elements
+[ ] 5.79  Lock for non-PRO users
+[ ] 5.80  Test on all pages
+
+PRO ACCESS CONTROL:
+[ ] 5.81  Check if user has active PRO subscription
+[ ] 5.82  Lock all PRO themes for non-PRO users
+[ ] 5.83  Show "Upgrade to PRO" prompt on locked themes
+[ ] 5.84  Show lock icon/badge on PRO themes in selector
+[ ] 5.85  PRO users can access all themes
+[ ] 5.86  Theme lock status persists across sessions
+
+STATUS: ___/86 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 6: THEME SELECTOR UI
+--------------------------------------------------------------------------------
+
+⚠️ CRITICAL: User needs to be able to SEE and SELECT themes.
+
+THEME SELECTOR ACCESS:
+[ ] 6.1   Theme Selector accessible from left sidebar (Palette icon)
+[ ] 6.2   Opens as modal/panel when clicked
+[ ] 6.3   Can also be accessed from Settings page (optional)
+
+THEME SELECTOR LAYOUT:
+[ ] 6.4   Grid layout for theme cards
+[ ] 6.5   Responsive: 3 columns on desktop, 2 on tablet, 1 on mobile
+[ ] 6.6   Search bar at top
+[ ] 6.7   Filter buttons: All / Empire / Pirate / Other
+[ ] 6.8   Separate sections or labels for FREE vs PRO themes
+
+THEME PREVIEW CARDS:
+[ ] 6.9   Each theme has a card
+[ ] 6.10  Card shows theme name
+[ ] 6.11  Card shows faction subtitle (e.g., "Corporate Efficiency")
+[ ] 6.12  Card shows 3-4 CSS color swatches (colored circles/squares)
+[ ] 6.13  Color swatches show: primary, secondary, accent, highlight colors
+[ ] 6.14  PRO badge/icon on locked themes
+[ ] 6.15  "Apply" button on unlocked themes
+[ ] 6.16  "Unlock" or "Upgrade to PRO" button on locked themes
+
+THEME APPLICATION:
+[ ] 6.17  Click "Apply" immediately switches to that theme
+[ ] 6.18  Theme change is instant (<100ms)
+[ ] 6.19  Theme persists after page reload
+[ ] 6.20  Current theme is highlighted/indicated
+[ ] 6.21  Modal closes after applying theme (optional)
+
+ADDITIONAL FEATURES:
+[ ] 6.22  "Random" theme button (selects random unlocked theme)
+[ ] 6.23  Theme preview on hover (optional)
+[ ] 6.24  "Match system time" toggle (light during day, dark at night)
+
+CSS COLOR SWATCH EXAMPLE:
+[ ] 6.25  Swatches are circular or square (20-30px each)
+[ ] 6.26  Swatches displayed in a row
+[ ] 6.27  Each swatch has the actual theme color as background
+
+STATUS: ___/27 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 7: CODE GENERATION SYSTEM - DATABASE
+--------------------------------------------------------------------------------
+
+⚠️ CRITICAL: Database tables for PHOTON code system.
+
+NOTE: Old PRO activation code system should remain intact. This is a NEW
+system that works ALONGSIDE the old one.
+
+TABLE 1: PHOTON_ACTIVATION_CODES
+[ ] 7.1   Create table: photon_activation_codes
+[ ] 7.2   Column: id (INT, PRIMARY KEY, AUTO_INCREMENT)
+[ ] 7.3   Column: code (VARCHAR(24), UNIQUE, NOT NULL)
+[ ] 7.4   Column: type (ENUM: 'pro', 'badge', 'both')
+[ ] 7.5   Column: pro_duration_days (INT, DEFAULT 0)
+[ ] 7.6   Column: pro_duration_hours (INT, DEFAULT 0)
+[ ] 7.7   Column: pro_duration_minutes (INT, DEFAULT 0)
+[ ] 7.8   Column: badge_ids (JSON array)
+[ ] 7.9   Column: max_redemptions (INT, DEFAULT 1)
+[ ] 7.10  Column: times_redeemed (INT, DEFAULT 0)
+[ ] 7.11  Column: expires_at (TIMESTAMP, NULL)
+[ ] 7.12  Column: is_active (BOOLEAN, DEFAULT TRUE)
+[ ] 7.13  Column: internal_note (VARCHAR(255))
+[ ] 7.14  Column: created_by (INT, FOREIGN KEY to users)
+[ ] 7.15  Column: created_at (TIMESTAMP, DEFAULT NOW)
+[ ] 7.16  Column: updated_at (TIMESTAMP, DEFAULT NOW ON UPDATE)
+
+TABLE 2: PHOTON_CODE_REDEMPTIONS
+[ ] 7.17  Create table: photon_code_redemptions
+[ ] 7.18  Column: id (INT, PRIMARY KEY, AUTO_INCREMENT)
+[ ] 7.19  Column: code_id (INT, FOREIGN KEY to photon_activation_codes)
+[ ] 7.20  Column: user_id (INT, FOREIGN KEY to users)
+[ ] 7.21  Column: character_id (INT, nullable)
+[ ] 7.22  Column: pro_days_granted (INT)
+[ ] 7.23  Column: pro_hours_granted (INT)
+[ ] 7.24  Column: pro_minutes_granted (INT)
+[ ] 7.25  Column: badges_granted (JSON array)
+[ ] 7.26  Column: redeemed_at (TIMESTAMP, DEFAULT NOW)
+[ ] 7.27  Column: ip_address (VARCHAR(45))
+[ ] 7.28  Column: user_agent (TEXT)
+[ ] 7.29  Constraint: UNIQUE (user_id, code_id) - prevent double redemption
+
+TABLE 3: PHOTON_CODE_ACTIVITY_LOG
+[ ] 7.30  Create table: photon_code_activity_log
+[ ] 7.31  Column: id (INT, PRIMARY KEY, AUTO_INCREMENT)
+[ ] 7.32  Column: activity_type (ENUM: 'generated', 'redeemed', 'modified', 'deactivated', 'failed_redemption')
+[ ] 7.33  Column: code_id (INT, FOREIGN KEY to photon_activation_codes)
+[ ] 7.34  Column: code_string (VARCHAR(24))
+[ ] 7.35  Column: actor_id (INT, FOREIGN KEY to users)
+[ ] 7.36  Column: actor_type (ENUM: 'admin', 'user')
+[ ] 7.37  Column: details (JSON) - flexible for activity-specific data
+[ ] 7.38  Column: created_at (TIMESTAMP, DEFAULT NOW)
+[ ] 7.39  Column: ip_address (VARCHAR(45))
+
+DATABASE VERIFICATION:
+[ ] 7.40  All tables created successfully
+[ ] 7.41  All foreign keys working
+[ ] 7.42  All indexes added for performance
+[ ] 7.43  Test: Can insert data into tables
+[ ] 7.44  Test: Foreign key constraints work
+
+STATUS: ___/44 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 8: CODE GENERATION SYSTEM - BACKEND LOGIC
+--------------------------------------------------------------------------------
+
+⚠️ CRITICAL: Encoding/decoding functions for PHOTON-XXXX-XXXX-XXXX codes.
+
+CODE FORMAT:
+[ ] 8.1   Format: PHOTON-XXXX-XXXX-XXXX (prefix + 12 characters)
+[ ] 8.2   Character set: 23456789ABCDEFGHJKMNPQRSTUVWXYZ (no 0,1,I,L,O)
+[ ] 8.3   Total characters: 12 (divided into 3 groups of 4)
+
+ENCODING FUNCTION:
+[ ] 8.4   Create function: generatePhotonCode(config)
+[ ] 8.5   Input: type (pro/badge/both)
+[ ] 8.6   Input: proDays, proHours, proMinutes
+[ ] 8.7   Input: badgeIds (array)
+[ ] 8.8   Input: maxRedemptions
+[ ] 8.9   Characters 1-2: Encode type (A=pro, B=badge, C=both)
+[ ] 8.10  Characters 3-6: Encode PRO duration (total minutes in base-32)
+[ ] 8.11  Characters 7-9: Encode badge IDs
+[ ] 8.12  Characters 10-11: Encode max redemptions
+[ ] 8.13  Character 12: Checksum for validation
+[ ] 8.14  Format output: PHOTON-XXXX-XXXX-XXXX
+
+DECODING FUNCTION:
+[ ] 8.15  Create function: decodePhotonCode(codeString)
+[ ] 8.16  Remove "PHOTON-" prefix and dashes
+[ ] 8.17  Validate length (must be 12 characters)
+[ ] 8.18  Validate checksum
+[ ] 8.19  Decode type from characters 1-2
+[ ] 8.20  Decode PRO duration from characters 3-6
+[ ] 8.21  Decode badge IDs from characters 7-9
+[ ] 8.22  Decode max redemptions from characters 10-11
+[ ] 8.23  Return object: {type, proDays, proHours, proMinutes, badgeIds, maxRedemptions}
+
+VALIDATION FUNCTION:
+[ ] 8.24  Create function: validatePhotonCode(codeString)
+[ ] 8.25  Check format: PHOTON-XXXX-XXXX-XXXX
+[ ] 8.26  Check length: Exactly 24 characters with dashes
+[ ] 8.27  Check characters: Only allowed characters
+[ ] 8.28  Check checksum: Must be valid
+[ ] 8.29  Return: true/false
+
+DATABASE OPERATIONS:
+[ ] 8.30  Function: saveCodeToDatabase(code, config, adminId)
+[ ] 8.31  Function: getCodeFromDatabase(codeString)
+[ ] 8.32  Function: incrementRedemptionCount(codeId)
+[ ] 8.33  Function: logCodeActivity(activity_type, code_id, actor_id, details)
+
+TESTING:
+[ ] 8.34  Test: Generate PRO-only code
+[ ] 8.35  Test: Generate badge-only code
+[ ] 8.36  Test: Generate PRO+badge code
+[ ] 8.37  Test: Decode generated code
+[ ] 8.38  Test: Validate checksum
+[ ] 8.39  Test: Invalid code rejected
+
+STATUS: ___/39 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 9: CODE GENERATION SYSTEM - ADMIN UI
+--------------------------------------------------------------------------------
+
+⚠️ CRITICAL: User cannot find admin code generation interface.
+
+ADMIN PAGE ACCESS:
+[ ] 9.1   Create admin page/section for PHOTON code generation
+[ ] 9.2   Accessible from: Admin Panel → Codes → Generate New Code
+[ ] 9.3   Or: Admin Panel → PHOTON Codes → Generate
+[ ] 9.4   Only accessible by admin users
+[ ] 9.5   Clearly labeled and easy to find
+
+CODE GENERATION FORM:
+[ ] 9.6   Form section: Code Type Selection
+[ ] 9.7   Radio button: PRO Time Only
+[ ] 9.8   Radio button: Badge Only
+[ ] 9.9   Radio button: PRO Time + Badge
+[ ] 9.10  Required: Must select one type
+
+PRO DURATION SECTION (if PRO selected):
+[ ] 9.11  Number input: Days (0-9999)
+[ ] 9.12  Number input: Hours (0-23)
+[ ] 9.13  Number input: Minutes (0-59)
+[ ] 9.14  Display: Total duration calculated (e.g., "30 days, 12 hours, 30 min")
+[ ] 9.15  Validation: All values must be >= 0
+
+BADGE SELECTION SECTION (if Badge selected):
+[ ] 9.16  Checkboxes: All available badges listed
+[ ] 9.17  Each checkbox shows: Badge name and rarity
+[ ] 9.18  Allow: Multiple badges can be selected
+[ ] 9.19  Note: "Multiple badges can be selected"
+
+CODE SETTINGS SECTION:
+[ ] 9.20  Number input: Max Redemptions
+[ ] 9.21  Help text: "0 = unlimited, 1 = single use"
+[ ] 9.22  Date picker: Code Valid Until
+[ ] 9.23  Checkbox: "Never expires" (sets expires_at to NULL)
+[ ] 9.24  Text input: Internal Note/Label
+[ ] 9.25  Help text: "e.g., 'Fanfest 2025 Giveaway'"
+[ ] 9.26  Max length: 255 characters
+
+FORM ACTIONS:
+[ ] 9.27  Button: "Generate Code"
+[ ] 9.28  Button: "Generate Batch (10)" - generates 10 codes with same settings
+[ ] 9.29  Form validation before submission
+[ ] 9.30  Loading state during generation
+
+SUCCESS DISPLAY:
+[ ] 9.31  After generation: Show generated code in large text
+[ ] 9.32  Format: PHOTON-XXXX-XXXX-XXXX
+[ ] 9.33  Button: "Copy to Clipboard"
+[ ] 9.34  Button: "Generate Another"
+[ ] 9.35  Display: What the code grants (PRO time, badges)
+[ ] 9.36  Display: Code settings (max uses, expiration, note)
+[ ] 9.37  Link: "View All Codes"
+
+CODE MANAGEMENT VIEW:
+[ ] 9.38  Create page: View All PHOTON Codes
+[ ] 9.39  Search bar: Search by code or note
+[ ] 9.40  Filters: Status (All/Active/Expired/Fully Redeemed)
+[ ] 9.41  Filters: Type (All/PRO Only/Badge Only/PRO+Badge)
+[ ] 9.42  List display: All generated codes
+[ ] 9.43  Each code shows: Code string, creation date, creator name
+[ ] 9.44  Each code shows: What it grants, status, redemptions (X/Y)
+[ ] 9.45  Each code shows: Expiration, note
+[ ] 9.46  Actions per code: View Details, Deactivate, Delete
+[ ] 9.47  Pagination: If many codes exist
+
+STATUS: ___/47 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 10: CODE ACTIVITY LOG (SPECIAL TAB)
+--------------------------------------------------------------------------------
+
+⚠️ CRITICAL: User specifically requested a SPECIAL TAB for activity log.
+
+ACTIVITY LOG ACCESS:
+[ ] 10.1  Create dedicated "Code Activity Log" tab/section
+[ ] 10.2  Location: Admin Panel → Codes → Activity Log
+[ ] 10.3  Or: Admin Panel → PHOTON Codes → Activity Log
+[ ] 10.4  Prominently displayed, not buried
+[ ] 10.5  Easy to find and access
+
+ACTIVITY LOG DISPLAY:
+[ ] 10.6  Date range selector: Last 7 days / 30 days / 90 days / All time
+[ ] 10.7  Export buttons: CSV and Excel
+[ ] 10.8  Filter checkboxes: Code Generations
+[ ] 10.9  Filter checkboxes: Code Redemptions
+[ ] 10.10 Filter checkboxes: Code Modifications
+[ ] 10.11 Filter checkboxes: Failed Attempts
+
+ACTIVITY ENTRIES - CODE GENERATIONS:
+[ ] 10.12 Show: "CODE GENERATED" badge/icon
+[ ] 10.13 Show: Code string (PHOTON-XXXX-XXXX-XXXX)
+[ ] 10.14 Show: Generated by admin name (Admin_Name)
+[ ] 10.15 Show: Admin ID
+[ ] 10.16 Show: Code type (PRO / Badge / PRO+Badge)
+[ ] 10.17 Show: Code settings (max uses, expiration)
+[ ] 10.18 Show: Internal note
+[ ] 10.19 Show: Timestamp (date and time)
+
+ACTIVITY ENTRIES - CODE REDEMPTIONS:
+[ ] 10.20 Show: "CODE REDEEMED" badge/icon
+[ ] 10.21 Show: Code string
+[ ] 10.22 Show: Redeemed by character name
+[ ] 10.23 Show: User ID
+[ ] 10.24 Show: What was granted (PRO time, badges)
+[ ] 10.25 Show: IP address
+[ ] 10.26 Show: Timestamp
+
+ACTIVITY ENTRIES - FAILED ATTEMPTS:
+[ ] 10.27 Show: "FAILED REDEMPTION" badge/icon
+[ ] 10.28 Show: Code string attempted
+[ ] 10.29 Show: Attempted by user name
+[ ] 10.30 Show: User ID
+[ ] 10.31 Show: Reason for failure (invalid format, expired, etc.)
+[ ] 10.32 Show: IP address
+[ ] 10.33 Show: Timestamp
+
+ACTIVITY ENTRIES - MODIFICATIONS:
+[ ] 10.34 Show: "CODE MODIFIED" badge/icon (if admins can edit codes)
+[ ] 10.35 Show: What was changed
+[ ] 10.36 Show: Modified by admin name
+
+ACTIVITY LOG FEATURES:
+[ ] 10.37 Chronological order: Most recent first
+[ ] 10.38 Pagination: 20-50 entries per page
+[ ] 10.39 Search: Search by code, user name, or admin name
+[ ] 10.40 Real-time: Updates when new activity occurs
+[ ] 10.41 Color coding: Green for redemptions, red for failures, blue for generations
+
+EXPORT FUNCTIONALITY:
+[ ] 10.42 CSV export: All visible entries
+[ ] 10.43 Excel export: All visible entries with formatting
+[ ] 10.44 Include all columns: Date, Type, Code, Actor, Details, IP
+
+STATUS: ___/44 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 11: CODE REDEMPTION - USER INTERFACE
+--------------------------------------------------------------------------------
+
+USER REDEMPTION PAGE ACCESS:
+[ ] 11.1  Create user redemption page/section
+[ ] 11.2  Accessible from: Settings → Redeem Code
+[ ] 11.3  Or: PRO page → Redeem Activation Code
+[ ] 11.4  Or: Dedicated "Redeem Code" link in left sidebar
+[ ] 11.5  All users can access (not just PRO)
+
+REDEMPTION FORM:
+[ ] 11.6  Page header: "Redeem Activation Code"
+[ ] 11.7  Input field: Code entry (formatted as PHOTON-____-____-____)
+[ ] 11.8  Input formatting: Auto-add dashes as user types
+[ ] 11.9  Button: "Redeem Code"
+[ ] 11.10 Placeholder text: "Enter your PHOTON code"
+
+CODE VALIDATION (Client-side):
+[ ] 11.11 Check format as user types
+[ ] 11.12 Show error if format invalid
+[ ] 11.13 Prevent submission if format wrong
+[ ] 11.14 Auto-uppercase letters
+
+CODE REDEMPTION LOGIC (Server-side):
+[ ] 11.15 Validate: Code format PHOTON-XXXX-XXXX-XXXX
+[ ] 11.16 Validate: Code exists in database
+[ ] 11.17 Validate: Code is active (is_active = true)
+[ ] 11.18 Validate: Code hasn't expired
+[ ] 11.19 Validate: Code hasn't reached max redemptions
+[ ] 11.20 Validate: User hasn't already redeemed this code
+[ ] 11.21 If valid: Decode code to get benefits
+[ ] 11.22 Grant: PRO time (extend existing subscription)
+[ ] 11.23 Grant: Badges (add to user_badges table)
+[ ] 11.24 Record: Redemption in photon_code_redemptions table
+[ ] 11.25 Increment: times_redeemed in photon_activation_codes table
+[ ] 11.26 Log: Activity in photon_code_activity_log table
+
+SUCCESS RESPONSE:
+[ ] 11.27 Show: "CODE REDEEMED SUCCESSFULLY!" message
+[ ] 11.28 Show: What was granted (PRO time duration)
+[ ] 11.29 Show: Badges granted (with icons)
+[ ] 11.30 Show: New PRO expiration date
+[ ] 11.31 Show: Message about badges appearing on profile/cards
+[ ] 11.32 Button: "Continue to Dashboard" or "Redeem Another"
+
+ERROR RESPONSES:
+[ ] 11.33 Error: "Invalid code format"
+[ ] 11.34 Error: "Code not found"
+[ ] 11.35 Error: "Code has expired"
+[ ] 11.36 Error: "Code has reached maximum redemptions"
+[ ] 11.37 Error: "You have already redeemed this code"
+[ ] 11.38 Error: "This code is not yet active"
+[ ] 11.39 All errors: User-friendly messages
+[ ] 11.40 All errors: Do not reveal sensitive information
+
+PREVIOUSLY REDEEMED CODES:
+[ ] 11.41 Section: "Previously Redeemed Codes"
+[ ] 11.42 List: All codes user has redeemed
+[ ] 11.43 Show: Date redeemed
+[ ] 11.44 Show: What was granted
+[ ] 11.45 Pagination or "Show More" if many codes
+
+STATUS: ___/45 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 12: BADGE SYSTEM - DATABASE
+--------------------------------------------------------------------------------
+
+TABLE 1: BADGES
+[ ] 12.1  Create table: badges
+[ ] 12.2  Column: id (INT, PRIMARY KEY, AUTO_INCREMENT)
+[ ] 12.3  Column: name (VARCHAR(100), NOT NULL)
+[ ] 12.4  Column: slug (VARCHAR(100), UNIQUE, NOT NULL)
+[ ] 12.5  Column: description (TEXT)
+[ ] 12.6  Column: rarity (ENUM: 'legendary', 'epic', 'rare', 'uncommon')
+[ ] 12.7  Column: icon_type (ENUM: 'lucide', 'custom', DEFAULT 'lucide')
+[ ] 12.8  Column: icon_value (VARCHAR(255)) - Lucide icon name or image URL
+[ ] 12.9  Column: unlockable_via_achievement (BOOLEAN, DEFAULT FALSE)
+[ ] 12.10 Column: achievement_criteria (JSON)
+[ ] 12.11 Column: display_order (INT, DEFAULT 0)
+[ ] 12.12 Column: is_visible (BOOLEAN, DEFAULT TRUE)
+[ ] 12.13 Column: created_at (TIMESTAMP, DEFAULT NOW)
+[ ] 12.14 Column: updated_at (TIMESTAMP, DEFAULT NOW ON UPDATE)
+
+TABLE 2: USER_BADGES
+[ ] 12.15 Create table: user_badges
+[ ] 12.16 Column: id (INT, PRIMARY KEY, AUTO_INCREMENT)
+[ ] 12.17 Column: user_id (INT, FOREIGN KEY to users)
+[ ] 12.18 Column: badge_id (INT, FOREIGN KEY to badges)
+[ ] 12.19 Column: granted_via (ENUM: 'admin', 'code', 'achievement')
+[ ] 12.20 Column: granted_by (INT, FOREIGN KEY to users, nullable)
+[ ] 12.21 Column: granted_at (TIMESTAMP, DEFAULT NOW)
+[ ] 12.22 Column: is_showcased (BOOLEAN, DEFAULT TRUE)
+[ ] 12.23 Column: showcase_order (INT, DEFAULT 0)
+[ ] 12.24 Constraint: UNIQUE (user_id, badge_id)
+
+TABLE 3: BADGE_ACTIVITY_LOG
+[ ] 12.25 Create table: badge_activity_log
+[ ] 12.26 Column: id (INT, PRIMARY KEY, AUTO_INCREMENT)
+[ ] 12.27 Column: activity_type (ENUM: 'granted', 'revoked', 'achievement_unlocked')
+[ ] 12.28 Column: badge_id (INT, FOREIGN KEY to badges)
+[ ] 12.29 Column: user_id (INT, FOREIGN KEY to users)
+[ ] 12.30 Column: admin_id (INT, FOREIGN KEY to users, nullable)
+[ ] 12.31 Column: grant_method (ENUM: 'admin', 'code', 'achievement')
+[ ] 12.32 Column: notes (TEXT)
+[ ] 12.33 Column: created_at (TIMESTAMP, DEFAULT NOW)
+
+INITIAL BADGES (Pre-populate):
+[ ] 12.34 Insert: Early Adopter (rare, Trophy icon)
+[ ] 12.35 Insert: Beta Tester (rare, Award icon)
+[ ] 12.36 Insert: Mining Enthusiast (uncommon, Pickaxe icon)
+[ ] 12.37 Insert: Mining Master (epic, Gem icon)
+[ ] 12.38 Insert: Session Veteran (rare, Clock icon)
+[ ] 12.39 Insert: ISK Millionaire (uncommon, Coins icon)
+[ ] 12.40 Insert: ISK Billionaire (legendary, Crown icon)
+
+RARITY COLOR CONFIGURATION:
+[ ] 12.41 Define: Legendary = #FFD700 (Gold)
+[ ] 12.42 Define: Epic = #9C27B0 (Purple)
+[ ] 12.43 Define: Rare = #2196F3 (Blue)
+[ ] 12.44 Define: Uncommon = #4CAF50 (Green)
+
+STATUS: ___/44 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 13: BADGE SYSTEM - ADMIN UI
+--------------------------------------------------------------------------------
+
+USER MANAGEMENT PAGE:
+[ ] 13.1  Create/enhance admin user management page
+[ ] 13.2  Location: Admin Panel → Users → Manage Users
+[ ] 13.3  Search bar: Search by character name, email, or ID
+[ ] 13.4  Filter checkboxes: PRO Users Only
+[ ] 13.5  Filter checkboxes: Has Badges
+[ ] 13.6  Filter checkboxes: Free Users Only
+[ ] 13.7  Filter checkboxes: Early Adopters
+[ ] 13.8  Filter checkboxes: Beta Testers
+[ ] 13.9  Filter checkboxes: Registered Last 30 Days
+[ ] 13.10 Filter checkboxes: Active Last 7 Days
+[ ] 13.11 Filter checkboxes: No Activity 30+ Days
+[ ] 13.12 Sort dropdown: Newest / Oldest / Most Active / Alphabetical
+
+USER LIST DISPLAY:
+[ ] 13.13 Checkbox: Select individual users
+[ ] 13.14 Checkbox: "Select All" at top
+[ ] 13.15 Show: Character name
+[ ] 13.16 Show: Email address
+[ ] 13.17 Show: User ID
+[ ] 13.18 Show: PRO status (Yes/No, expiration date)
+[ ] 13.19 Show: Badges (display up to 3 badge icons)
+[ ] 13.20 Show: Registration date
+[ ] 13.21 Show: Last active date
+[ ] 13.22 Actions: View Profile / Grant Badge / Manage PRO / View Sessions
+[ ] 13.23 Pagination: 20 users per page
+
+BULK ACTIONS:
+[ ] 13.24 Dropdown: "Bulk Actions"
+[ ] 13.25 Option: Grant Badge (when users selected)
+[ ] 13.26 Option: Export CSV (selected or all)
+[ ] 13.27 Button: "Apply" to execute bulk action
+
+GRANT BADGE MODAL (Single User):
+[ ] 13.28 Trigger: Click "Grant Badge" on a user
+[ ] 13.29 Modal title: "Grant Badge to: [Character Name]"
+[ ] 13.30 Radio buttons: List all available badges
+[ ] 13.31 Each option shows: Badge icon, name, rarity
+[ ] 13.32 Text area: Internal Note (optional)
+[ ] 13.33 Button: "Grant Badge"
+[ ] 13.34 Button: "Cancel"
+[ ] 13.35 After grant: Success message
+[ ] 13.36 After grant: Badge appears immediately in user list
+
+GRANT BADGE MODAL (Bulk - Multiple Users):
+[ ] 13.37 Trigger: Select multiple users → Bulk Actions → Grant Badge
+[ ] 13.38 Modal title: "Bulk Grant Badge"
+[ ] 13.39 Show: Number of selected users
+[ ] 13.40 Show: List of selected user names (first few + "and X more")
+[ ] 13.41 Dropdown: Select badge to grant
+[ ] 13.42 Text area: Internal Note (optional)
+[ ] 13.43 Warning: "This action cannot be undone. All selected users will receive this badge."
+[ ] 13.44 Button: "Grant to All"
+[ ] 13.45 Button: "Cancel"
+
+BULK GRANT SUCCESS:
+[ ] 13.46 Show: "BADGES GRANTED SUCCESSFULLY" message
+[ ] 13.47 Show: Badge name that was granted
+[ ] 13.48 Show: List of recipient names (first few + "and X more")
+[ ] 13.49 Show: Total count (e.g., "Total: 15 badges granted")
+[ ] 13.50 Link: "View Badge Activity Log"
+[ ] 13.51 Button: "Close"
+
+BADGE ACTIVITY LOG PAGE:
+[ ] 13.52 Create page: Badge Activity Log
+[ ] 13.53 Location: Admin Panel → Badges → Activity Log
+[ ] 13.54 Date range selector: Last 7/30/90 days / All time
+[ ] 13.55 Export buttons: CSV and Excel
+[ ] 13.56 Filter checkboxes: Admin Grants
+[ ] 13.57 Filter checkboxes: Code Redemptions
+[ ] 13.58 Filter checkboxes: Achievement Unlocks
+[ ] 13.59 Dropdown: Filter by specific badge (All Badges / Early Adopter / etc.)
+
+BADGE ACTIVITY ENTRIES:
+[ ] 13.60 Show: Activity type icon/badge
+[ ] 13.61 Show: Badge name and rarity
+[ ] 13.62 Show: Granted to user name (with user ID)
+[ ] 13.63 Show: Granted by admin name (with admin ID) if admin grant
+[ ] 13.64 Show: Via code (code string) if code redemption
+[ ] 13.65 Show: Achievement name if achievement unlock
+[ ] 13.66 Show: Timestamp
+[ ] 13.67 Show: Notes (if any)
+[ ] 13.68 Chronological order: Most recent first
+[ ] 13.69 Pagination: 20-50 entries per page
+
+BADGE MANAGEMENT PAGE:
+[ ] 13.70 Create page: Manage Badges
+[ ] 13.71 Location: Admin Panel → Badges → Manage Badges
+[ ] 13.72 Button: "+ Create New Badge"
+[ ] 13.73 List all existing badges
+[ ] 13.74 Each badge shows: Icon, name, rarity
+[ ] 13.75 Each badge shows: Number of users who have it
+[ ] 13.76 Each badge shows: Description
+[ ] 13.77 Each badge shows: Unlockable via achievement (Yes/No)
+[ ] 13.78 Actions: Edit / View Recipients / Delete
+[ ] 13.79 Create/Edit badge form: Badge name
+[ ] 13.80 Create/Edit badge form: Description
+[ ] 13.81 Create/Edit badge form: Rarity selection
+[ ] 13.82 Create/Edit badge form: Icon (Lucide icon name or custom URL)
+[ ] 13.83 Create/Edit badge form: Unlockable via achievement checkbox
+[ ] 13.84 Create/Edit badge form: Achievement criteria (if applicable)
+
+STATUS: ___/84 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 14: BADGE SYSTEM - USER DISPLAY
+--------------------------------------------------------------------------------
+
+LEFT SIDEBAR FOOTER - BADGE DISPLAY:
+[ ] 14.1  Display top 3 badges in left sidebar footer
+[ ] 14.2  Position: Below character name, above logout button
+[ ] 14.3  When expanded: Show all 3 badge icons in a row
+[ ] 14.4  When collapsed: Show top badge only
+[ ] 14.5  Badge icons: Lucide React icons
+[ ] 14.6  Badge colors: Based on rarity (gold, purple, blue, green)
+[ ] 14.7  Icon size: 24px (or appropriate size)
+
+BADGE TOOLTIPS:
+[ ] 14.8  Tooltip trigger: Hover over badge icon
+[ ] 14.9  Tooltip shows: Badge name
+[ ] 14.10 Tooltip shows: Rarity level
+[ ] 14.11 Tooltip shows: Date granted (optional)
+[ ] 14.12 Tooltip styling: Theme-aware
+[ ] 14.13 Tooltip appears quickly (200ms delay)
+
+TOP 3 BADGE SELECTION:
+[ ] 14.14 Logic: User's 3 highest rarity badges
+[ ] 14.15 Or: User can customize which 3 to showcase
+[ ] 14.16 Default: Most recently acquired if same rarity
+
+SHAREABLE SESSION CARDS - BADGE DISPLAY:
+[ ] 14.17 On /share/:id pages: Show top 3 badges
+[ ] 14.18 Position: Near character name at top of card
+[ ] 14.19 Display: 3 badge icons in a row
+[ ] 14.20 Same styling as sidebar badges
+[ ] 14.21 Tooltips work on hover (desktop)
+
+USER BADGE COLLECTION PAGE:
+[ ] 14.22 Create page: My Badges
+[ ] 14.23 Accessible from: User Profile → Badges tab
+[ ] 14.24 Or: Character page → Badges section
+[ ] 14.25 Summary: "You have earned X of Y available badges"
+
+TOP 3 SHOWCASED SECTION:
+[ ] 14.26 Section: "Top 3 Showcased Badges"
+[ ] 14.27 Note: "These appear on your profile and session cards"
+[ ] 14.28 Display: 3 badge slots with icons
+[ ] 14.29 Each badge shows: Icon, name, rarity
+[ ] 14.30 Actions: Move Up / Move Down / Remove from Showcase
+[ ] 14.31 Drag-and-drop reordering (optional enhancement)
+
+ALL MY BADGES SECTION:
+[ ] 14.32 Section: "All My Badges"
+[ ] 14.33 List: All badges user has earned
+[ ] 14.34 Each badge shows: Icon (colored by rarity)
+[ ] 14.35 Each badge shows: Name and rarity
+[ ] 14.36 Each badge shows: Description
+[ ] 14.37 Each badge shows: Granted date
+[ ] 14.38 Each badge shows: How obtained (Admin / Code / Achievement)
+[ ] 14.39 Sorting: By rarity, by date, or alphabetical
+
+LOCKED BADGES SECTION:
+[ ] 14.40 Section: "Locked Badges (Not Yet Earned)"
+[ ] 14.41 List: All badges user doesn't have
+[ ] 14.42 Each locked badge shows: Greyed out icon
+[ ] 14.43 Each locked badge shows: Lock icon overlay
+[ ] 14.44 Each locked badge shows: Name and rarity
+[ ] 14.45 Each locked badge shows: How to earn (if achievement)
+[ ] 14.46 If achievement badge: Show progress bar
+[ ] 14.47 Progress bar shows: Current / Required (e.g., "234,567 / 1,000,000 m³")
+[ ] 14.48 Progress bar shows: Percentage complete
+
+BADGE UNLOCK NOTIFICATION:
+[ ] 14.49 When badge unlocked via achievement: Show modal/toast
+[ ] 14.50 Modal title: "🎉 BADGE UNLOCKED!"
+[ ] 14.51 Modal shows: Large badge icon
+[ ] 14.52 Modal shows: Badge name and rarity
+[ ] 14.53 Modal shows: Description
+[ ] 14.54 Modal shows: "This badge now appears on your profile"
+[ ] 14.55 Button: "View My Badges"
+[ ] 14.56 Button: "Close"
+[ ] 14.57 Alternative: Toast notification (small, non-intrusive)
+
+STATUS: ___/57 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 15: BADGE SYSTEM - ACHIEVEMENT UNLOCKS
+--------------------------------------------------------------------------------
+
+ACHIEVEMENT CRITERIA SETUP:
+[ ] 15.1  Define achievement for Mining Enthusiast: 100,000 m³ ore mined
+[ ] 15.2  Define achievement for Mining Master: 1,000,000 m³ ore mined
+[ ] 15.3  Define achievement for Session Veteran: 100 sessions completed
+[ ] 15.4  Define achievement for ISK Millionaire: 100,000,000 ISK earned
+[ ] 15.5  Define achievement for ISK Billionaire: 1,000,000,000 ISK earned
+[ ] 15.6  Store criteria in badges table (achievement_criteria JSON field)
+
+ACHIEVEMENT CHECKING FUNCTION:
+[ ] 15.7  Create function: checkBadgeAchievements(userId)
+[ ] 15.8  Fetch user statistics (ore mined, sessions, ISK earned)
+[ ] 15.9  Loop through all achievement-based badges
+[ ] 15.10 Check if user already has each badge
+[ ] 15.11 Skip if already has badge
+[ ] 15.12 Compare user stats to achievement criteria
+[ ] 15.13 If criteria met: Grant badge automatically
+[ ] 15.14 Log achievement unlock in badge_activity_log
+[ ] 15.15 Send notification to user
+
+WHEN TO CHECK ACHIEVEMENTS:
+[ ] 15.16 After mining session completes
+[ ] 15.17 After session is saved/updated
+[ ] 15.18 After user statistics are updated
+[ ] 15.19 On user login (daily check)
+[ ] 15.20 When user views badges page
+[ ] 15.21 Efficient: Don't check too frequently (use cooldowns)
+
+BADGE GRANTING LOGIC:
+[ ] 15.22 Function: grantBadge(userId, badgeId, grantMethod, grantedBy)
+[ ] 15.23 Check: User doesn't already have badge
+[ ] 15.24 Insert: Record in user_badges table
+[ ] 15.25 Set: granted_via = 'achievement' (or 'admin' or 'code')
+[ ] 15.26 Set: granted_by = admin ID (if admin grant) or NULL
+[ ] 15.27 Set: granted_at = current timestamp
+[ ] 15.28 Log: Activity in badge_activity_log
+[ ] 15.29 Trigger: Notification to user
+[ ] 15.30 Return: Success
+
+PROGRESS TRACKING:
+[ ] 15.31 For each achievement badge: Calculate progress
+[ ] 15.32 Formula: (current_value / required_value) * 100
+[ ] 15.33 Display on locked badges page
+[ ] 15.34 Update progress when user stats change
+
+TESTING:
+[ ] 15.35 Test: User reaches 100,000 m³ → Mining Enthusiast unlocked
+[ ] 15.36 Test: User reaches 1,000,000 m³ → Mining Master unlocked
+[ ] 15.37 Test: User completes 100 sessions → Session Veteran unlocked
+[ ] 15.38 Test: Notification appears on unlock
+[ ] 15.39 Test: Badge appears in sidebar immediately
+[ ] 15.40 Test: Badge appears on shareable cards
+
+STATUS: ___/40 Complete (___%)
+
+--------------------------------------------------------------------------------
+SECTION 16: BUG FIXES & UI POLISH
+--------------------------------------------------------------------------------
+
+⚠️ PRIORITY: These are user-reported bugs. Fix immediately.
+
+BUG FIX 1: Left Sidebar Toggle
+[ ] 16.1  ⚠️ CRITICAL: Sidebar toggle button doesn't open sidebar when closed
+[ ] 16.2  Current behavior: Only closes when open
+[ ] 16.3  Required behavior: Opens when closed, closes when open
+[ ] 16.4  Test: Click toggle when sidebar closed → should open
+[ ] 16.5  Test: Click toggle when sidebar open → should close
+[ ] 16.6  Test: Works on desktop
+[ ] 16.7  Test: Works on mobile
+[ ] 16.8  Test: Animation plays correctly both directions
+
+BUG FIX 2: Preview Page Header
+[ ] 16.9  ⚠️ CRITICAL: Remove large "PHOTON" tile/banner from preview page
+[ ] 16.10 Location: Top of /share/:id or preview page
+[ ] 16.11 Action: Remove or significantly shrink
+[ ] 16.12 Result: Header is clean and minimal
+[ ] 16.13 Test: Preview page loads without large tile
+[ ] 16.14 Test: Page still looks good without it
+
+BUG FIX 3: Button Standardization on Preview Page
+[ ] 16.15 ⚠️ CRITICAL: Make 3 buttons uniform size and style
+[ ] 16.16 Button 1: "Customize Tiles"
+[ ] 16.17 Button 2: "Reset Layout"
+[ ] 16.18 Button 3: "Unlock to Edit"
+[ ] 16.19 Standardize: Same height (e.g., 36px or 40px)
+[ ] 16.20 Standardize: Same padding (e.g., 12px horizontal, 8px vertical)
+[ ] 16.21 Standardize: Same font size (e.g., 14px)
+[ ] 16.22 Standardize: Same border-radius
+[ ] 16.23 Standardize: Same font weight
+[ ] 16.24 Colors can differ but proportions must match
+[ ] 16.25 Test: All 3 buttons look uniform on preview page
+
+GENERAL UI POLISH:
+[ ] 16.26 Review: All buttons have consistent styling
+[ ] 16.27 Review: All inputs have consistent styling
+[ ] 16.28 Review: All modals have consistent styling
+[ ] 16.29 Review: All tooltips have consistent styling
+[ ] 16.30 Review: All transitions are smooth (60fps)
+[ ] 16.31 Review: No layout shifts or jank
+[ ] 16.32 Review: Loading states for all async actions
+[ ] 16.33 Review: Error states are user-friendly
+[ ] 16.34 Review: Success messages are clear
+
+RESPONSIVE DESIGN:
+[ ] 16.35 Test: All pages work on mobile (320px width)
+[ ] 16.36 Test: All pages work on tablet (768px width)
+[ ] 16.37 Test: All pages work on desktop (1920px width)
+[ ] 16.38 Test: All modals fit on screen
+[ ] 16.39 Test: All forms are usable on mobile
+[ ] 16.40 Test: Left sidebar works on all screen sizes
+
+ACCESSIBILITY:
+[ ] 16.41 Test: Tab through entire app with keyboard
+[ ] 16.42 Test: All focusable elements have visible focus
+[ ] 16.43 Test: Screen reader can navigate app
+[ ] 16.44 Test: All images have alt text
+[ ] 16.45 Test: All buttons have descriptive labels
+[ ] 16.46 Test: Color contrast meets WCAG AA
+[ ] 16.47 Test: App works with reduced motion
+[ ] 16.48 Test: App works with high contrast mode
+
+STATUS: ___/48 Complete (___%)
+
+================================================================================
+PART C: VERIFICATION CHECKLIST (YES/NO)
+================================================================================
+
+After completing all implementation tasks, answer YES or NO to each question.
+DO NOT mark the project complete until ALL answers are YES.
+
+--------------------------------------------------------------------------------
+REBRANDING
+--------------------------------------------------------------------------------
+
+[ ] Can you see "PHOTON" instead of "RAT TRACKER" everywhere? YES / NO
+[ ] Is there a version number displayed on dashboard? YES / NO
+[ ] Is the version format "v0.1.0-dev | In Development" or similar? YES / NO
+[ ] Where is the version displayed? (describe): ___________________
+
+STATUS: ___/4 Verified
+
+--------------------------------------------------------------------------------
+LEFT SIDEBAR
+--------------------------------------------------------------------------------
+
+[ ] Is there a NEW sidebar on the LEFT side of the screen? YES / NO
+[ ] Does it have Dashboard navigation? YES / NO
+[ ] Does it have Mining navigation? YES / NO
+[ ] Does it have Loot Tracker navigation? YES / NO
+[ ] Does it have Sessions navigation? YES / NO
+[ ] Does it have Character navigation? YES / NO
+[ ] Does it have Export button? YES / NO
+[ ] Does it have Settings navigation? YES / NO
+[ ] Does it have Theme Selector button (Palette icon)? YES / NO
+[ ] Does it have PRO button (Star icon)? YES / NO
+[ ] Does it have Admin Panel button (Shield icon, admin only)? YES / NO
+[ ] Does clicking the toggle button OPEN the sidebar when closed? YES / NO ⚠️
+[ ] Does clicking the toggle button CLOSE the sidebar when open? YES / NO ⚠️
+[ ] Does the sidebar footer show character avatar? YES / NO
+[ ] Does the sidebar footer show character name? YES / NO
+[ ] Does the sidebar footer show top 3 badges? YES / NO
+[ ] Do badges show tooltips with name and rarity on hover? YES / NO
+[ ] Is the RIGHT sidebar still there and unmodified? YES / NO
+
+STATUS: ___/18 Verified
+
+--------------------------------------------------------------------------------
+HEADER CLEANUP
+--------------------------------------------------------------------------------
+
+[ ] Has the theme selector button been removed from header? YES / NO
+[ ] Has the mining tab button been removed from header? YES / NO
+[ ] Has the PRO button been removed from header? YES / NO
+[ ] Has the user profile button been removed from header? YES / NO
+[ ] Has the export button been removed from header? YES / NO
+[ ] Has the admin shield been removed from header? YES / NO
+[ ] Is the header now clean and minimal? YES / NO
+[ ] Does all functionality still work from left sidebar? YES / NO
+
+STATUS: ___/8 Verified
+
+--------------------------------------------------------------------------------
+FREE THEMES
+--------------------------------------------------------------------------------
+
+[ ] Can you select "Light" theme? YES / NO
+[ ] Does Light theme work on all pages? YES / NO
+[ ] Can you select "Dark" theme? YES / NO
+[ ] Does Dark theme work on all pages? YES / NO
+[ ] Can you select "Caldari State" theme? YES / NO
+[ ] Does Caldari theme work on all pages? YES / NO
+[ ] Can you select "Amarr Empire" theme? YES / NO
+[ ] Does Amarr theme work on all pages? YES / NO
+[ ] Can you select "Gallente Federation" theme? YES / NO
+[ ] Does Gallente theme work on all pages? YES / NO
+[ ] Can you select "Minmatar Republic" theme? YES / NO
+[ ] Does Minmatar theme work on all pages? YES / NO
+[ ] Can you select "CONCORD" theme? YES / NO
+[ ] Does CONCORD theme work on all pages? YES / NO
+[ ] Total FREE themes available: ___ (should be 7)
+
+STATUS: ___/15 Verified
+
+--------------------------------------------------------------------------------
+PRO THEMES
+--------------------------------------------------------------------------------
+
+[ ] Can you see "Triglavian Collective" theme? YES / NO
+[ ] Is it locked for non-PRO users? YES / NO
+[ ] Can you see "Guristas Pirates" theme? YES / NO
+[ ] Is it locked for non-PRO users? YES / NO
+[ ] Can you see "Angel Cartel" theme? YES / NO
+[ ] Is it locked for non-PRO users? YES / NO
+[ ] Can you see "Blood Raiders" theme? YES / NO
+[ ] Is it locked for non-PRO users? YES / NO
+[ ] Can you see "Jove Empire" theme? YES / NO
+[ ] Is it locked for non-PRO users? YES / NO
+[ ] Can you see "Sleepers/Drifters" theme? YES / NO
+[ ] Is it locked for non-PRO users? YES / NO
+[ ] Can you see "Sisters of EVE" theme? YES / NO
+[ ] Is it locked for non-PRO users? YES / NO
+[ ] Can you see "ORE" theme? YES / NO
+[ ] Is it locked for non-PRO users? YES / NO
+[ ] Total PRO themes available: ___ (should be 8)
+[ ] Do PRO themes show "Upgrade to PRO" or lock icon? YES / NO
+[ ] Can PRO users access all PRO themes? YES / NO
+
+STATUS: ___/19 Verified
+
+--------------------------------------------------------------------------------
+THEME SELECTOR
+--------------------------------------------------------------------------------
+
+[ ] Can you open the theme selector? YES / NO
+[ ] Where does it open from? (describe): ___________________
+[ ] Does it show all 15 themes? YES / NO
+[ ] Does it show color swatches for each theme? YES / NO
+[ ] Can you apply a theme by clicking "Apply"? YES / NO
+[ ] Does the theme change immediately (<1 second)? YES / NO
+[ ] Does the selected theme persist after page reload? YES / NO
+[ ] Is the current theme highlighted in the selector? YES / NO
+
+STATUS: ___/8 Verified
+
+--------------------------------------------------------------------------------
+ADMIN - CODE GENERATION
+--------------------------------------------------------------------------------
+
+[ ] Can admins access a code generation page? YES / NO ⚠️ CRITICAL
+[ ] Where is it located? (describe): ___________________
+[ ] Can you generate codes in PHOTON-XXXX-XXXX-XXXX format? YES / NO
+[ ] Can you set PRO duration in days? YES / NO
+[ ] Can you set PRO duration in hours? YES / NO
+[ ] Can you set PRO duration in minutes? YES / NO
+[ ] Can you select multiple badges for one code? YES / NO
+[ ] Can you set max redemptions? YES / NO
+[ ] Can you set expiration date? YES / NO
+[ ] Can you set "never expires"? YES / NO
+[ ] Can you add internal notes? YES / NO
+[ ] Does it generate valid codes? YES / NO
+[ ] Can you copy the generated code to clipboard? YES / NO
+[ ] Can you generate batch codes (10 at once)? YES / NO
+
+STATUS: ___/14 Verified
+
+--------------------------------------------------------------------------------
+ADMIN - CODE MANAGEMENT
+--------------------------------------------------------------------------------
+
+[ ] Can you view all generated PHOTON codes? YES / NO
+[ ] Can you search for codes? YES / NO
+[ ] Can you filter codes by status? YES / NO
+[ ] Can you filter codes by type? YES / NO
+[ ] Does each code show who created it? YES / NO
+[ ] Does each code show creation date? YES / NO
+[ ] Does each code show what it grants? YES / NO
+[ ] Does each code show redemption count (X/Y used)? YES / NO
+[ ] Can you deactivate codes? YES / NO
+[ ] Can you delete codes? YES / NO
+
+STATUS: ___/10 Verified
+
+--------------------------------------------------------------------------------
+ADMIN - CODE ACTIVITY LOG (SPECIAL TAB)
+--------------------------------------------------------------------------------
+
+[ ] Is there a "Code Activity Log" tab/section? YES / NO ⚠️ CRITICAL
+[ ] Where is it located? (describe): ___________________
+[ ] Does it show who GENERATED codes? YES / NO
+[ ] Does it show when codes were generated? YES / NO
+[ ] Does it show who REDEEMED codes? YES / NO
+[ ] Does it show when codes were redeemed? YES / NO
+[ ] Does it show what was granted in redemptions? YES / NO
+[ ] Does it show FAILED redemption attempts? YES / NO
+[ ] Does it show reason for failures? YES / NO
+[ ] Does it show IP addresses? YES / NO
+[ ] Can you filter by activity type? YES / NO
+[ ] Can you filter by date range? YES / NO
+[ ] Can you export to CSV? YES / NO
+[ ] Can you export to Excel? YES / NO
+
+STATUS: ___/14 Verified
+
+--------------------------------------------------------------------------------
+USER - CODE REDEMPTION
+--------------------------------------------------------------------------------
+
+[ ] Can users access a code redemption page? YES / NO
+[ ] Where is it located? (describe): ___________________
+[ ] Can users enter PHOTON-XXXX-XXXX-XXXX codes? YES / NO
+[ ] Does it validate code format as they type? YES / NO
+[ ] Does it show success message when code works? YES / NO
+[ ] Does it show error message when code invalid? YES / NO
+[ ] Does it show specific error reasons? YES / NO
+[ ] Does it grant PRO time when redeemed? YES / NO
+[ ] Does it grant badges when redeemed? YES / NO
+[ ] Does it prevent double redemption? YES / NO
+[ ] Can users see their previously redeemed codes? YES / NO
+
+STATUS: ___/11 Verified
+
+--------------------------------------------------------------------------------
+ADMIN - BADGE MANAGEMENT
+--------------------------------------------------------------------------------
+
+[ ] Can admins access user management page? YES / NO
+[ ] Can admins search for users? YES / NO
+[ ] Can admins filter users by criteria? YES / NO
+[ ] Can admins select multiple users? YES / NO
+[ ] Can admins grant badge to single user? YES / NO
+[ ] Can admins grant badge to multiple users (bulk)? YES / NO
+[ ] Does bulk grant show confirmation? YES / NO
+[ ] Does badge grant show in user list immediately? YES / NO
+[ ] Is there a badge activity log? YES / NO
+[ ] Does badge activity log show all grants? YES / NO
+[ ] Does badge activity log show who granted to whom? YES / NO
+[ ] Can admins see who has which badges? YES / NO
+
+STATUS: ___/12 Verified
+
+--------------------------------------------------------------------------------
+USER - BADGE DISPLAY
+--------------------------------------------------------------------------------
+
+[ ] Do top 3 badges show in left sidebar footer? YES / NO
+[ ] Do badges show as Lucide icons? YES / NO
+[ ] Are badges colored by rarity? YES / NO
+[ ] Do badges show tooltips on hover? YES / NO
+[ ] Do tooltips show badge name? YES / NO
+[ ] Do tooltips show rarity? YES / NO
+[ ] Do badges show on shareable session cards (/share/:id)? YES / NO
+[ ] Can users view their badge collection page? YES / NO
+[ ] Does badge page show all earned badges? YES / NO
+[ ] Does badge page show locked badges? YES / NO
+[ ] Does badge page show progress for achievement badges? YES / NO
+
+STATUS: ___/11 Verified
+
+--------------------------------------------------------------------------------
+BADGE - ACHIEVEMENTS
+--------------------------------------------------------------------------------
+
+[ ] Are achievement badges configured? YES / NO
+[ ] Does Mining Enthusiast unlock at 100,000 m³? YES / NO
+[ ] Does Mining Master unlock at 1,000,000 m³? YES / NO
+[ ] Does Session Veteran unlock at 100 sessions? YES / NO
+[ ] Does ISK Millionaire unlock at 100M ISK? YES / NO
+[ ] Does ISK Billionaire unlock at 1B ISK? YES / NO
+[ ] Do badges unlock automatically when criteria met? YES / NO
+[ ] Does user get notified when badge unlocks? YES / NO
+[ ] Does badge appear in sidebar immediately after unlock? YES / NO
+
+STATUS: ___/9 Verified
+
+--------------------------------------------------------------------------------
+BUG FIXES
+--------------------------------------------------------------------------------
+
+[ ] Does left sidebar toggle OPEN when closed? YES / NO ⚠️ CRITICAL
+[ ] Does left sidebar toggle CLOSE when open? YES / NO ⚠️ CRITICAL
+[ ] Is large "PHOTON" tile removed from preview page? YES / NO ⚠️ CRITICAL
+[ ] Are "Customize Tiles" / "Reset Layout" / "Unlock" buttons uniform size? YES / NO ⚠️ CRITICAL
+[ ] Do all 3 buttons have same height? YES / NO
+[ ] Do all 3 buttons have same padding? YES / NO
+[ ] Do all 3 buttons have same font size? YES / NO
+
+STATUS: ___/7 Verified
+
+--------------------------------------------------------------------------------
+GENERAL QUALITY
+--------------------------------------------------------------------------------
+
+[ ] Do all pages load without errors? YES / NO
+[ ] Are there any console errors? YES / NO (should be NO)
+[ ] Does app work on Chrome? YES / NO
+[ ] Does app work on Firefox? YES / NO
+[ ] Does app work on Safari? YES / NO
+[ ] Does app work on mobile devices? YES / NO
+[ ] Are animations smooth (60fps)? YES / NO
+[ ] Is keyboard navigation working? YES / NO
+[ ] Do focus indicators show? YES / NO
+[ ] Does app respect prefers-reduced-motion? YES / NO
+[ ] Are all colors WCAG AA compliant? YES / NO
+
+STATUS: ___/11 Verified
+
+================================================================================
+FINAL VERIFICATION SUMMARY
+================================================================================
+
+TOTAL ITEMS COMPLETED: ___/1000+
+
+⚠️ CRITICAL FEATURES STATUS:
+[ ] Admin code generation - Complete and accessible
+[ ] Code activity log - Special tab exists and shows all activity
+[ ] All 15 themes - Implemented and selectable
+[ ] Theme selector - Accessible and working
+[ ] Left sidebar toggle - Opens AND closes correctly
+[ ] Preview page - Large tile removed, buttons uniform
+[ ] Badges in sidebar - Top 3 showing with tooltips
+[ ] Header cleanup - All items moved to sidebar
+
+BEFORE MARKING THIS PROJECT COMPLETE:
+1. ALL checkboxes in Part B must be checked
+2. ALL questions in Part C must answer "YES"
+3. ALL critical features must be working
+4. ALL bugs must be fixed
+5. User must be able to find and use all features
+
+If ANY critical feature is not working, DO NOT mark as complete.
+If you cannot complete something, STOP and ASK for help.
+
+================================================================================
+END OF CHECKLIST
+================================================================================
+
+Remember: This is a comprehensive transformation of the entire application.
+Take your time, test thoroughly, and deliver quality work.
+
+PHOTON awaits! ⚡ o7

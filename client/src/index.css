@@ -1,0 +1,1945 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* React Grid Layout Styles */
+.react-grid-layout {
+  position: relative;
+  transition: height 200ms ease;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top, width, height;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform, width, height;
+}
+
+.react-grid-item.resizing {
+  z-index: 1;
+  will-change: width, height;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  will-change: transform;
+  opacity: 0.95;
+  transform: scale(1.02);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3), 0 0 30px -10px hsl(var(--primary) / 0.3);
+  border-radius: var(--radius);
+}
+
+.react-grid-item.dropping {
+  visibility: hidden;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.25) 100%);
+  border: 2px dashed hsl(var(--primary) / 0.6);
+  border-radius: var(--radius);
+  opacity: 1;
+  transition-duration: 100ms;
+  z-index: 2;
+  animation: placeholder-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes placeholder-pulse {
+  0%, 100% { background: linear-gradient(135deg, hsl(var(--primary) / 0.15) 0%, hsl(var(--primary) / 0.25) 100%); }
+  50% { background: linear-gradient(135deg, hsl(var(--primary) / 0.25) 0%, hsl(var(--primary) / 0.35) 100%); }
+}
+
+@keyframes glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px hsl(var(--primary) / 0.4)) drop-shadow(0 0 4px hsl(var(--primary) / 0.2));
+  }
+  50% {
+    filter: drop-shadow(0 0 6px hsl(var(--primary) / 0.8)) drop-shadow(0 0 12px hsl(var(--primary) / 0.4));
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  z-index: 10;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 12px;
+  height: 12px;
+  border-right: 3px solid hsl(var(--primary) / 0.6);
+  border-bottom: 3px solid hsl(var(--primary) / 0.6);
+  border-radius: 2px;
+  transition: all 150ms ease;
+}
+
+.react-grid-item > .react-resizable-handle:hover::after {
+  border-color: hsl(var(--primary));
+  width: 14px;
+  height: 14px;
+}
+
+.react-grid-item.resizing > .react-resizable-handle::after {
+  border-color: hsl(var(--primary));
+  width: 16px;
+  height: 16px;
+  animation: resize-pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes resize-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.react-resizable-handle-sw {
+  bottom: 0;
+  left: 0;
+  cursor: sw-resize;
+  transform: rotate(90deg);
+}
+
+.react-resizable-handle-se {
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}
+
+.react-resizable-handle-nw {
+  top: 0;
+  left: 0;
+  cursor: nw-resize;
+  transform: rotate(180deg);
+}
+
+.react-resizable-handle-ne {
+  top: 0;
+  right: 0;
+  cursor: ne-resize;
+  transform: rotate(270deg);
+}
+
+.react-resizable-handle-w,
+.react-resizable-handle-e {
+  top: 50%;
+  margin-top: -10px;
+  cursor: ew-resize;
+}
+
+.react-resizable-handle-w {
+  left: 0;
+  transform: rotate(135deg);
+}
+
+.react-resizable-handle-e {
+  right: 0;
+  transform: rotate(315deg);
+}
+
+.react-resizable-handle-n,
+.react-resizable-handle-s {
+  left: 50%;
+  margin-left: -10px;
+  cursor: ns-resize;
+}
+
+.react-resizable-handle-n {
+  top: 0;
+  transform: rotate(225deg);
+}
+
+.react-resizable-handle-s {
+  bottom: 0;
+  transform: rotate(45deg);
+}
+
+/* Hide resize handles when layout is locked */
+.layout-locked .react-resizable-handle {
+  display: none !important;
+}
+
+/* Show resize handles only when unlocked */
+.layout-unlocked .react-resizable-handle {
+  display: block;
+}
+
+/* LIGHT MODE */
+:root {
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+  --background: 210 6% 98%;
+  --foreground: 210 6% 12%;
+  --border: 210 6% 88%;
+  --card: 210 6% 96%;
+  --card-foreground: 210 6% 12%;
+  --card-border: 210 6% 92%;
+  --sidebar: 210 6% 94%;
+  --sidebar-foreground: 210 6% 12%;
+  --sidebar-border: 210 6% 89%;
+  --sidebar-primary: 195 100% 35%;
+  --sidebar-primary-foreground: 195 100% 98%;
+  --sidebar-accent: 210 8% 88%;
+  --sidebar-accent-foreground: 210 8% 15%;
+  --sidebar-ring: 195 100% 35%;
+  --popover: 210 6% 92%;
+  --popover-foreground: 210 6% 12%;
+  --popover-border: 210 6% 87%;
+  --primary: 195 100% 35%;
+  --primary-foreground: 195 100% 98%;
+  --secondary: 210 8% 88%;
+  --secondary-foreground: 210 8% 15%;
+  --muted: 210 10% 90%;
+  --muted-foreground: 210 10% 25%;
+  --accent: 210 12% 89%;
+  --accent-foreground: 210 12% 18%;
+  --destructive: 0 84% 35%;
+  --destructive-foreground: 0 84% 98%;
+  --input: 210 12% 72%;
+  --ring: 195 100% 35%;
+  --chart-1: 195 95% 30%;
+  --chart-2: 200 90% 35%;
+  --chart-3: 185 85% 32%;
+  --chart-4: 190 80% 28%;
+  --chart-5: 205 75% 33%;
+  --font-sans: Open Sans, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --radius: .5rem;
+  --shadow-2xs: 0px 2px 0px 0px hsl(210 6% 12% / 0.02);
+  --shadow-xs: 0px 2px 0px 0px hsl(210 6% 12% / 0.04);
+  --shadow-sm: 0px 2px 0px 0px hsl(210 6% 12% / 0.02), 0px 1px 2px -1px hsl(210 6% 12% / 0.06);
+  --shadow: 0px 2px 0px 0px hsl(210 6% 12% / 0.02), 0px 1px 2px -1px hsl(210 6% 12% / 0.06);
+  --shadow-md: 0px 2px 0px 0px hsl(210 6% 12% / 0.03), 0px 2px 4px -1px hsl(210 6% 12% / 0.08);
+  --shadow-lg: 0px 2px 0px 0px hsl(210 6% 12% / 0.04), 0px 4px 6px -1px hsl(210 6% 12% / 0.10);
+  --shadow-xl: 0px 2px 0px 0px hsl(210 6% 12% / 0.05), 0px 8px 10px -1px hsl(210 6% 12% / 0.12);
+  --shadow-2xl: 0px 2px 0px 0px hsl(210 6% 12% / 0.08);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+
+/* Fallback for older browsers */
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --primary-border: hsl(var(--primary));
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --secondary-border: hsl(var(--secondary));
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --muted-border: hsl(var(--muted));
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --accent-border: hsl(var(--accent));
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --destructive-border: hsl(var(--destructive));
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+.dark {
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .05);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .09);
+  --background: 220 35% 5%;
+  --foreground: 210 20% 96%;
+  --border: 220 25% 14%;
+  --card: 220 30% 8%;
+  --card-foreground: 210 20% 96%;
+  --card-border: 220 28% 12%;
+  --sidebar: 220 32% 10%;
+  --sidebar-foreground: 210 20% 96%;
+  --sidebar-border: 220 28% 13%;
+  --sidebar-primary: 190 100% 50%;
+  --sidebar-primary-foreground: 190 100% 98%;
+  --sidebar-accent: 220 25% 14%;
+  --sidebar-accent-foreground: 210 20% 92%;
+  --sidebar-ring: 190 100% 50%;
+  --popover: 220 30% 10%;
+  --popover-foreground: 210 20% 96%;
+  --popover-border: 220 28% 15%;
+  --primary: 190 100% 50%;
+  --primary-foreground: 220 35% 5%;
+  --secondary: 220 25% 14%;
+  --secondary-foreground: 210 20% 94%;
+  --muted: 220 22% 12%;
+  --muted-foreground: 210 15% 60%;
+  --accent: 220 20% 13%;
+  --accent-foreground: 210 20% 94%;
+  --destructive: 0 72% 45%;
+  --destructive-foreground: 0 0% 98%;
+  --input: 220 22% 20%;
+  --ring: 190 100% 50%;
+  --chart-1: 190 100% 50%;
+  --chart-2: 200 95% 55%;
+  --chart-3: 185 90% 60%;
+  --chart-4: 195 85% 52%;
+  --chart-5: 205 80% 58%;
+  --shadow-2xs: 0px 2px 0px 0px hsl(215 20% 2% / 0.20);
+  --shadow-xs: 0px 2px 0px 0px hsl(215 20% 2% / 0.25);
+  --shadow-sm: 0px 2px 0px 0px hsl(215 20% 2% / 0.20), 0px 1px 2px -1px hsl(215 20% 2% / 0.30);
+  --shadow: 0px 2px 0px 0px hsl(215 20% 2% / 0.20), 0px 1px 2px -1px hsl(215 20% 2% / 0.30);
+  --shadow-md: 0px 2px 0px 0px hsl(215 20% 2% / 0.25), 0px 2px 4px -1px hsl(215 20% 2% / 0.35);
+  --shadow-lg: 0px 2px 0px 0px hsl(215 20% 2% / 0.30), 0px 4px 6px -1px hsl(215 20% 2% / 0.40);
+  --shadow-xl: 0px 2px 0px 0px hsl(215 20% 2% / 0.35), 0px 8px 10px -1px hsl(215 20% 2% / 0.45);
+  --shadow-2xl: 0px 2px 0px 0px hsl(215 20% 2% / 0.50);
+
+/* Fallback for older browsers */
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --primary-border: hsl(var(--primary));
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --secondary-border: hsl(var(--secondary));
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --muted-border: hsl(var(--muted));
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --accent-border: hsl(var(--accent));
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --destructive-border: hsl(var(--destructive));
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+/* ============================================
+   EVE ONLINE RACIAL THEMES
+   Each race has distinct color palettes for both light and dark modes
+   Inspired by the unique aesthetics of each EVE Online faction
+   ============================================ */
+
+/* ----------------------------------------
+   CALDARI STATE - GUNMETAL STEEL & RED ENGINE ACCENTS
+   Cold, efficient, corporate megacorporation aesthetic
+   Bare gunmetal hulls with red bands on engines
+   Asymmetrical, angular, utilitarian design
+   ---------------------------------------- */
+
+/* CALDARI Light Mode - Corporate headquarters */
+.light.caldari {
+  --background: 210 12% 96%;
+  --foreground: 210 20% 12%;
+  --border: 210 10% 82%;
+  --card: 210 14% 94%;
+  --card-foreground: 210 20% 12%;
+  --card-border: 210 12% 86%;
+  --sidebar: 210 12% 90%;
+  --sidebar-foreground: 210 20% 12%;
+  --sidebar-border: 210 10% 82%;
+  --sidebar-primary: 0 75% 45%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 210 12% 82%;
+  --sidebar-accent-foreground: 210 18% 18%;
+  --sidebar-ring: 0 75% 45%;
+  --popover: 210 12% 92%;
+  --popover-foreground: 210 20% 12%;
+  --popover-border: 210 10% 80%;
+  --primary: 0 75% 45%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 210 10% 82%;
+  --secondary-foreground: 210 18% 18%;
+  --muted: 210 8% 86%;
+  --muted-foreground: 210 10% 40%;
+  --accent: 210 10% 84%;
+  --accent-foreground: 210 18% 18%;
+  --input: 210 10% 72%;
+  --ring: 0 75% 45%;
+  --chart-1: 0 80% 42%;
+  --chart-2: 210 40% 50%;
+  --chart-3: 15 70% 48%;
+  --chart-4: 200 35% 45%;
+  --chart-5: 345 65% 50%;
+}
+
+/* CALDARI Dark Mode - Deep space station */
+.dark.caldari {
+  --background: 210 20% 6%;
+  --foreground: 210 15% 92%;
+  --border: 210 18% 16%;
+  --card: 210 20% 9%;
+  --card-foreground: 210 15% 92%;
+  --card-border: 210 18% 14%;
+  --sidebar: 210 20% 10%;
+  --sidebar-foreground: 210 15% 92%;
+  --sidebar-border: 210 18% 15%;
+  --sidebar-primary: 0 85% 55%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 210 18% 16%;
+  --sidebar-accent-foreground: 210 12% 88%;
+  --sidebar-ring: 0 85% 55%;
+  --popover: 210 20% 11%;
+  --popover-foreground: 210 15% 92%;
+  --popover-border: 210 18% 17%;
+  --primary: 0 85% 55%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 210 18% 16%;
+  --secondary-foreground: 210 12% 90%;
+  --muted: 210 16% 14%;
+  --muted-foreground: 210 10% 55%;
+  --accent: 210 14% 15%;
+  --accent-foreground: 210 12% 90%;
+  --input: 210 16% 22%;
+  --ring: 0 85% 55%;
+  --chart-1: 0 85% 55%;
+  --chart-2: 210 45% 58%;
+  --chart-3: 15 75% 55%;
+  --chart-4: 200 40% 52%;
+  --chart-5: 345 70% 58%;
+}
+
+/* ----------------------------------------
+   AMARR EMPIRE - Imperial Gold & Divine Bronze
+   Opulent, religious, luxurious imperial aesthetic
+   Warm golds, rich bronze, burgundy undertones
+   Ornate, divine right, ancient grandeur
+   ---------------------------------------- */
+
+/* AMARR Light Mode - Ivory cathedral halls */
+.light.amarr {
+  --background: 40 25% 97%;
+  --foreground: 35 30% 12%;
+  --border: 40 20% 85%;
+  --card: 42 30% 95%;
+  --card-foreground: 35 30% 12%;
+  --card-border: 40 22% 88%;
+  --sidebar: 38 28% 92%;
+  --sidebar-foreground: 35 30% 12%;
+  --sidebar-border: 40 20% 85%;
+  --sidebar-primary: 42 90% 42%;
+  --sidebar-primary-foreground: 42 15% 98%;
+  --sidebar-accent: 38 25% 85%;
+  --sidebar-accent-foreground: 35 25% 18%;
+  --sidebar-ring: 42 90% 42%;
+  --popover: 40 28% 93%;
+  --popover-foreground: 35 30% 12%;
+  --popover-border: 40 20% 84%;
+  --primary: 42 90% 42%;
+  --primary-foreground: 42 15% 98%;
+  --secondary: 38 22% 85%;
+  --secondary-foreground: 35 25% 18%;
+  --muted: 40 18% 88%;
+  --muted-foreground: 35 15% 35%;
+  --accent: 35 20% 86%;
+  --accent-foreground: 35 25% 18%;
+  --input: 40 18% 75%;
+  --ring: 42 90% 42%;
+  --chart-1: 42 95% 38%;
+  --chart-2: 35 88% 42%;
+  --chart-3: 48 82% 40%;
+  --chart-4: 30 75% 35%;
+  --chart-5: 8 70% 38%;
+}
+
+/* AMARR Dark Mode - Golden temple depths */
+.dark.amarr {
+  --background: 30 35% 6%;
+  --foreground: 40 25% 95%;
+  --border: 35 30% 16%;
+  --card: 32 32% 9%;
+  --card-foreground: 40 25% 95%;
+  --card-border: 35 28% 14%;
+  --sidebar: 30 35% 11%;
+  --sidebar-foreground: 40 25% 95%;
+  --sidebar-border: 35 28% 15%;
+  --sidebar-primary: 45 100% 52%;
+  --sidebar-primary-foreground: 30 35% 6%;
+  --sidebar-accent: 35 28% 16%;
+  --sidebar-accent-foreground: 40 22% 90%;
+  --sidebar-ring: 45 100% 52%;
+  --popover: 32 32% 11%;
+  --popover-foreground: 40 25% 95%;
+  --popover-border: 35 28% 17%;
+  --primary: 45 100% 52%;
+  --primary-foreground: 30 35% 6%;
+  --secondary: 35 28% 16%;
+  --secondary-foreground: 40 22% 92%;
+  --muted: 33 25% 14%;
+  --muted-foreground: 38 18% 58%;
+  --accent: 35 22% 15%;
+  --accent-foreground: 40 22% 92%;
+  --input: 35 25% 22%;
+  --ring: 45 100% 52%;
+  --chart-1: 45 100% 52%;
+  --chart-2: 38 95% 48%;
+  --chart-3: 52 90% 55%;
+  --chart-4: 32 85% 45%;
+  --chart-5: 8 80% 50%;
+}
+
+/* ----------------------------------------
+   GALLENTE FEDERATION - VERDIGRIS & BRONZE PATINA
+   Democratic, artistic, organic aesthetic
+   Silver/bronze with verdigris (green copper patina)
+   Smooth flowing curves, colorful, bio-organic
+   ---------------------------------------- */
+
+/* GALLENTE Light Mode - Sunlit federation gardens */
+.light.gallente {
+  --background: 165 15% 96%;
+  --foreground: 168 25% 12%;
+  --border: 165 14% 82%;
+  --card: 168 18% 94%;
+  --card-foreground: 168 25% 12%;
+  --card-border: 165 16% 86%;
+  --sidebar: 165 16% 90%;
+  --sidebar-foreground: 168 25% 12%;
+  --sidebar-border: 165 14% 82%;
+  --sidebar-primary: 165 55% 38%;
+  --sidebar-primary-foreground: 165 12% 98%;
+  --sidebar-accent: 165 16% 82%;
+  --sidebar-accent-foreground: 168 22% 18%;
+  --sidebar-ring: 165 55% 38%;
+  --popover: 168 16% 92%;
+  --popover-foreground: 168 25% 12%;
+  --popover-border: 165 14% 80%;
+  --primary: 165 55% 38%;
+  --primary-foreground: 165 12% 98%;
+  --secondary: 165 14% 82%;
+  --secondary-foreground: 168 22% 18%;
+  --muted: 165 12% 86%;
+  --muted-foreground: 165 12% 40%;
+  --accent: 162 14% 84%;
+  --accent-foreground: 168 22% 18%;
+  --input: 165 12% 72%;
+  --ring: 165 55% 38%;
+  --chart-1: 165 60% 35%;
+  --chart-2: 35 50% 52%;
+  --chart-3: 178 55% 40%;
+  --chart-4: 145 48% 38%;
+  --chart-5: 195 45% 45%;
+}
+
+/* GALLENTE Dark Mode - Deep verdigris depths */
+.dark.gallente {
+  --background: 168 35% 5%;
+  --foreground: 165 18% 92%;
+  --border: 165 28% 14%;
+  --card: 168 32% 8%;
+  --card-foreground: 165 18% 92%;
+  --card-border: 165 26% 12%;
+  --sidebar: 168 35% 10%;
+  --sidebar-foreground: 165 18% 92%;
+  --sidebar-border: 165 26% 13%;
+  --sidebar-primary: 165 65% 48%;
+  --sidebar-primary-foreground: 168 40% 5%;
+  --sidebar-accent: 165 26% 14%;
+  --sidebar-accent-foreground: 165 16% 88%;
+  --sidebar-ring: 165 65% 48%;
+  --popover: 168 32% 10%;
+  --popover-foreground: 165 18% 92%;
+  --popover-border: 165 26% 15%;
+  --primary: 165 65% 48%;
+  --primary-foreground: 168 40% 5%;
+  --secondary: 165 26% 14%;
+  --secondary-foreground: 165 16% 90%;
+  --muted: 168 22% 12%;
+  --muted-foreground: 165 14% 52%;
+  --accent: 165 20% 13%;
+  --accent-foreground: 165 16% 90%;
+  --input: 165 24% 20%;
+  --ring: 165 65% 48%;
+  --chart-1: 165 65% 48%;
+  --chart-2: 35 55% 58%;
+  --chart-3: 178 60% 50%;
+  --chart-4: 145 55% 48%;
+  --chart-5: 195 50% 52%;
+}
+
+/* ----------------------------------------
+   MINMATAR REPUBLIC - Tribal Rust & Industrial Orange
+   Rebellious, industrial, tribal aesthetic
+   Burnt rust, deep oranges, weathered metal
+   Freedom fighters, recycled tech, raw power
+   ---------------------------------------- */
+
+/* MINMATAR Light Mode - Desert tribal grounds */
+.light.minmatar {
+  --background: 25 20% 96%;
+  --foreground: 20 28% 14%;
+  --border: 22 18% 82%;
+  --card: 28 24% 93%;
+  --card-foreground: 20 28% 14%;
+  --card-border: 24 20% 86%;
+  --sidebar: 22 22% 90%;
+  --sidebar-foreground: 20 28% 14%;
+  --sidebar-border: 22 18% 82%;
+  --sidebar-primary: 22 88% 38%;
+  --sidebar-primary-foreground: 22 15% 98%;
+  --sidebar-accent: 24 18% 82%;
+  --sidebar-accent-foreground: 20 25% 20%;
+  --sidebar-ring: 22 88% 38%;
+  --popover: 26 22% 91%;
+  --popover-foreground: 20 28% 14%;
+  --popover-border: 22 18% 80%;
+  --primary: 22 88% 38%;
+  --primary-foreground: 22 15% 98%;
+  --secondary: 24 18% 82%;
+  --secondary-foreground: 20 25% 20%;
+  --muted: 25 15% 85%;
+  --muted-foreground: 20 12% 38%;
+  --accent: 28 16% 83%;
+  --accent-foreground: 20 25% 20%;
+  --input: 22 15% 72%;
+  --ring: 22 88% 38%;
+  --chart-1: 22 92% 35%;
+  --chart-2: 15 85% 40%;
+  --chart-3: 32 80% 38%;
+  --chart-4: 8 75% 35%;
+  --chart-5: 40 70% 42%;
+}
+
+/* MINMATAR Dark Mode - Industrial forge depths */
+.dark.minmatar {
+  --background: 18 38% 5%;
+  --foreground: 25 22% 94%;
+  --border: 20 32% 14%;
+  --card: 20 35% 8%;
+  --card-foreground: 25 22% 94%;
+  --card-border: 20 30% 12%;
+  --sidebar: 18 38% 10%;
+  --sidebar-foreground: 25 22% 94%;
+  --sidebar-border: 20 30% 13%;
+  --sidebar-primary: 24 95% 52%;
+  --sidebar-primary-foreground: 18 38% 5%;
+  --sidebar-accent: 20 30% 14%;
+  --sidebar-accent-foreground: 25 20% 88%;
+  --sidebar-ring: 24 95% 52%;
+  --popover: 20 35% 10%;
+  --popover-foreground: 25 22% 94%;
+  --popover-border: 20 30% 15%;
+  --primary: 24 95% 52%;
+  --primary-foreground: 18 38% 5%;
+  --secondary: 20 30% 14%;
+  --secondary-foreground: 25 20% 90%;
+  --muted: 20 26% 12%;
+  --muted-foreground: 22 16% 52%;
+  --accent: 22 24% 13%;
+  --accent-foreground: 25 20% 90%;
+  --input: 20 28% 20%;
+  --ring: 24 95% 52%;
+  --chart-1: 24 95% 52%;
+  --chart-2: 16 90% 48%;
+  --chart-3: 35 85% 55%;
+  --chart-4: 8 80% 45%;
+  --chart-5: 42 75% 58%;
+}
+
+/* ----------------------------------------
+   CONCORD - DEEP NAVY & GOLD BADGE
+   The galactic police force aesthetic
+   Official, secure, authoritative presence
+   ---------------------------------------- */
+
+/* CONCORD Light Mode - Pristine security halls */
+.light.concord {
+  --background: 230 30% 97%;
+  --foreground: 235 35% 12%;
+  --border: 228 25% 82%;
+  --card: 232 32% 94%;
+  --card-foreground: 235 35% 12%;
+  --card-border: 228 28% 85%;
+  --sidebar: 235 30% 90%;
+  --sidebar-foreground: 235 35% 12%;
+  --sidebar-border: 228 25% 82%;
+  --sidebar-primary: 48 95% 48%;
+  --sidebar-primary-foreground: 235 40% 8%;
+  --sidebar-accent: 228 26% 82%;
+  --sidebar-accent-foreground: 235 30% 18%;
+  --sidebar-ring: 48 95% 48%;
+  --popover: 232 30% 92%;
+  --popover-foreground: 235 35% 12%;
+  --popover-border: 228 25% 80%;
+  --primary: 48 95% 48%;
+  --primary-foreground: 235 40% 8%;
+  --secondary: 228 24% 82%;
+  --secondary-foreground: 235 30% 18%;
+  --muted: 230 20% 86%;
+  --muted-foreground: 228 18% 38%;
+  --accent: 225 22% 84%;
+  --accent-foreground: 235 30% 18%;
+  --input: 228 20% 72%;
+  --ring: 48 95% 48%;
+  --chart-1: 48 98% 45%;
+  --chart-2: 235 75% 55%;
+  --chart-3: 55 90% 50%;
+  --chart-4: 225 70% 52%;
+  --chart-5: 42 88% 48%;
+}
+
+/* CONCORD Dark Mode - Deep space security station */
+.dark.concord {
+  --background: 235 45% 5%;
+  --foreground: 228 28% 95%;
+  --border: 232 38% 15%;
+  --card: 232 42% 8%;
+  --card-foreground: 228 28% 95%;
+  --card-border: 232 36% 12%;
+  --sidebar: 235 45% 10%;
+  --sidebar-foreground: 228 28% 95%;
+  --sidebar-border: 232 36% 13%;
+  --sidebar-primary: 48 100% 55%;
+  --sidebar-primary-foreground: 235 45% 5%;
+  --sidebar-accent: 232 36% 14%;
+  --sidebar-accent-foreground: 228 24% 88%;
+  --sidebar-ring: 48 100% 55%;
+  --popover: 232 42% 10%;
+  --popover-foreground: 228 28% 95%;
+  --popover-border: 232 36% 15%;
+  --primary: 48 100% 55%;
+  --primary-foreground: 235 45% 5%;
+  --secondary: 232 36% 14%;
+  --secondary-foreground: 228 24% 90%;
+  --muted: 235 32% 12%;
+  --muted-foreground: 228 20% 55%;
+  --accent: 232 30% 13%;
+  --accent-foreground: 228 24% 90%;
+  --input: 232 34% 20%;
+  --ring: 48 100% 55%;
+  --chart-1: 48 100% 55%;
+  --chart-2: 235 80% 62%;
+  --chart-3: 55 95% 58%;
+  --chart-4: 225 75% 58%;
+  --chart-5: 42 92% 55%;
+}
+
+/* ----------------------------------------
+   TRIGLAVIAN - Crimson Abyss & Dark Maroon
+   Mysterious, alien, dangerous aesthetic
+   Deep reds, dark purples, eerie glow
+   ---------------------------------------- */
+
+/* TRIGLAVIAN Light Mode - Surface emergence */
+.light.triglavian {
+  --background: 350 18% 96%;
+  --foreground: 355 28% 14%;
+  --border: 348 16% 82%;
+  --card: 352 22% 94%;
+  --card-foreground: 355 28% 14%;
+  --card-border: 348 18% 85%;
+  --sidebar: 355 20% 91%;
+  --sidebar-foreground: 355 28% 14%;
+  --sidebar-border: 348 16% 82%;
+  --sidebar-primary: 348 75% 38%;
+  --sidebar-primary-foreground: 350 15% 98%;
+  --sidebar-accent: 348 18% 82%;
+  --sidebar-accent-foreground: 355 24% 20%;
+  --sidebar-ring: 348 75% 38%;
+  --popover: 352 20% 92%;
+  --popover-foreground: 355 28% 14%;
+  --popover-border: 348 16% 80%;
+  --primary: 348 75% 38%;
+  --primary-foreground: 350 15% 98%;
+  --secondary: 348 16% 82%;
+  --secondary-foreground: 355 24% 20%;
+  --muted: 350 14% 85%;
+  --muted-foreground: 348 12% 38%;
+  --accent: 345 15% 83%;
+  --accent-foreground: 355 24% 20%;
+  --input: 348 14% 72%;
+  --ring: 348 75% 38%;
+  --chart-1: 348 80% 35%;
+  --chart-2: 320 70% 42%;
+  --chart-3: 360 75% 40%;
+  --chart-4: 280 65% 38%;
+  --chart-5: 340 72% 45%;
+}
+
+/* TRIGLAVIAN Dark Mode - Abyssal depths */
+.dark.triglavian {
+  --background: 350 45% 4%;
+  --foreground: 348 22% 94%;
+  --border: 352 38% 14%;
+  --card: 352 42% 7%;
+  --card-foreground: 348 22% 94%;
+  --card-border: 352 35% 12%;
+  --sidebar: 350 45% 9%;
+  --sidebar-foreground: 348 22% 94%;
+  --sidebar-border: 352 35% 13%;
+  --sidebar-primary: 348 85% 50%;
+  --sidebar-primary-foreground: 350 45% 4%;
+  --sidebar-accent: 352 35% 14%;
+  --sidebar-accent-foreground: 348 20% 88%;
+  --sidebar-ring: 348 85% 50%;
+  --popover: 352 42% 9%;
+  --popover-foreground: 348 22% 94%;
+  --popover-border: 352 35% 15%;
+  --primary: 348 85% 50%;
+  --primary-foreground: 350 45% 4%;
+  --secondary: 352 35% 14%;
+  --secondary-foreground: 348 20% 90%;
+  --muted: 350 30% 12%;
+  --muted-foreground: 348 18% 52%;
+  --accent: 352 28% 13%;
+  --accent-foreground: 348 20% 90%;
+  --input: 352 32% 20%;
+  --ring: 348 85% 50%;
+  --chart-1: 348 85% 50%;
+  --chart-2: 320 80% 52%;
+  --chart-3: 360 82% 55%;
+  --chart-4: 280 75% 48%;
+  --chart-5: 340 78% 55%;
+}
+
+/* ----------------------------------------
+   GURISTAS - PITCH BLACK & NEON TEAL
+   Lawless, cunning, shadowy pirate aesthetic
+   Deep blacks, electric neon teals, skull motifs
+   ---------------------------------------- */
+
+/* GURISTAS Light Mode - Surface operations */
+.light.guristas {
+  --background: 180 8% 95%;
+  --foreground: 180 20% 10%;
+  --border: 175 12% 78%;
+  --card: 178 10% 92%;
+  --card-foreground: 180 20% 10%;
+  --card-border: 175 14% 82%;
+  --sidebar: 180 12% 88%;
+  --sidebar-foreground: 180 20% 10%;
+  --sidebar-border: 175 12% 78%;
+  --sidebar-primary: 172 100% 35%;
+  --sidebar-primary-foreground: 175 10% 98%;
+  --sidebar-accent: 175 14% 78%;
+  --sidebar-accent-foreground: 180 18% 15%;
+  --sidebar-ring: 172 100% 35%;
+  --popover: 178 10% 90%;
+  --popover-foreground: 180 20% 10%;
+  --popover-border: 175 12% 76%;
+  --primary: 172 100% 35%;
+  --primary-foreground: 175 10% 98%;
+  --secondary: 175 12% 78%;
+  --secondary-foreground: 180 18% 15%;
+  --muted: 178 10% 82%;
+  --muted-foreground: 175 8% 42%;
+  --accent: 172 12% 80%;
+  --accent-foreground: 180 18% 15%;
+  --input: 175 10% 68%;
+  --ring: 172 100% 35%;
+  --chart-1: 172 100% 32%;
+  --chart-2: 165 95% 38%;
+  --chart-3: 180 92% 35%;
+  --chart-4: 158 88% 40%;
+  --chart-5: 185 85% 38%;
+}
+
+/* GURISTAS Dark Mode - Shadow operations - VERY DARK */
+.dark.guristas {
+  --background: 180 25% 3%;
+  --foreground: 172 15% 92%;
+  --border: 175 20% 12%;
+  --card: 178 22% 5%;
+  --card-foreground: 172 15% 92%;
+  --card-border: 175 18% 10%;
+  --sidebar: 180 25% 6%;
+  --sidebar-foreground: 172 15% 92%;
+  --sidebar-border: 175 18% 11%;
+  --sidebar-primary: 172 100% 50%;
+  --sidebar-primary-foreground: 180 30% 3%;
+  --sidebar-accent: 175 18% 12%;
+  --sidebar-accent-foreground: 172 12% 85%;
+  --sidebar-ring: 172 100% 50%;
+  --popover: 178 22% 7%;
+  --popover-foreground: 172 15% 92%;
+  --popover-border: 175 18% 13%;
+  --primary: 172 100% 50%;
+  --primary-foreground: 180 30% 3%;
+  --secondary: 175 18% 12%;
+  --secondary-foreground: 172 12% 88%;
+  --muted: 180 18% 10%;
+  --muted-foreground: 172 12% 48%;
+  --accent: 175 15% 11%;
+  --accent-foreground: 172 12% 88%;
+  --input: 175 18% 16%;
+  --ring: 172 100% 50%;
+  --chart-1: 172 100% 50%;
+  --chart-2: 165 98% 52%;
+  --chart-3: 180 95% 48%;
+  --chart-4: 158 92% 55%;
+  --chart-5: 185 90% 52%;
+}
+
+/* ----------------------------------------
+   ANGEL CARTEL - FIERY ORANGE & CHROME
+   Fast, aggressive, dusty cartel aesthetic
+   Hot oranges, chrome silvers, speed lines
+   ---------------------------------------- */
+
+/* ANGEL CARTEL Light Mode - Desert operations */
+.light.angel {
+  --background: 20 18% 96%;
+  --foreground: 15 35% 12%;
+  --border: 18 20% 82%;
+  --card: 22 22% 94%;
+  --card-foreground: 15 35% 12%;
+  --card-border: 18 22% 85%;
+  --sidebar: 18 20% 90%;
+  --sidebar-foreground: 15 35% 12%;
+  --sidebar-border: 18 20% 82%;
+  --sidebar-primary: 18 95% 50%;
+  --sidebar-primary-foreground: 18 15% 98%;
+  --sidebar-accent: 18 22% 82%;
+  --sidebar-accent-foreground: 15 30% 16%;
+  --sidebar-ring: 18 95% 50%;
+  --popover: 22 20% 92%;
+  --popover-foreground: 15 35% 12%;
+  --popover-border: 18 20% 80%;
+  --primary: 18 95% 50%;
+  --primary-foreground: 18 15% 98%;
+  --secondary: 18 20% 82%;
+  --secondary-foreground: 15 30% 16%;
+  --muted: 20 16% 85%;
+  --muted-foreground: 18 14% 38%;
+  --accent: 15 18% 83%;
+  --accent-foreground: 15 30% 16%;
+  --input: 18 18% 72%;
+  --ring: 18 95% 50%;
+  --chart-1: 18 98% 48%;
+  --chart-2: 8 92% 45%;
+  --chart-3: 28 95% 52%;
+  --chart-4: 0 88% 42%;
+  --chart-5: 38 90% 55%;
+}
+
+/* ANGEL CARTEL Dark Mode - Night raids */
+.dark.angel {
+  --background: 15 45% 4%;
+  --foreground: 20 25% 94%;
+  --border: 18 40% 14%;
+  --card: 18 42% 7%;
+  --card-foreground: 20 25% 94%;
+  --card-border: 18 38% 12%;
+  --sidebar: 15 45% 9%;
+  --sidebar-foreground: 20 25% 94%;
+  --sidebar-border: 18 38% 13%;
+  --sidebar-primary: 18 100% 58%;
+  --sidebar-primary-foreground: 15 50% 4%;
+  --sidebar-accent: 18 38% 14%;
+  --sidebar-accent-foreground: 20 22% 88%;
+  --sidebar-ring: 18 100% 58%;
+  --popover: 18 42% 9%;
+  --popover-foreground: 20 25% 94%;
+  --popover-border: 18 38% 15%;
+  --primary: 18 100% 58%;
+  --primary-foreground: 15 50% 4%;
+  --secondary: 18 38% 14%;
+  --secondary-foreground: 20 22% 90%;
+  --muted: 15 34% 12%;
+  --muted-foreground: 18 20% 52%;
+  --accent: 18 32% 13%;
+  --accent-foreground: 20 22% 90%;
+  --input: 18 36% 20%;
+  --ring: 18 100% 58%;
+  --chart-1: 18 100% 58%;
+  --chart-2: 8 95% 55%;
+  --chart-3: 28 98% 60%;
+  --chart-4: 0 92% 52%;
+  --chart-5: 38 95% 62%;
+}
+
+/* ----------------------------------------
+   BLOOD RAIDERS - WINE RED & DARK BURGUNDY
+   Vampiric, sinister, cult-like aesthetic
+   Deep wine reds, burgundy blacks, sacrifice motifs
+   ---------------------------------------- */
+
+/* BLOOD RAIDERS Light Mode - Temple surface */
+.light.blood {
+  --background: 355 15% 95%;
+  --foreground: 350 40% 12%;
+  --border: 352 18% 80%;
+  --card: 358 18% 92%;
+  --card-foreground: 350 40% 12%;
+  --card-border: 352 20% 84%;
+  --sidebar: 355 18% 88%;
+  --sidebar-foreground: 350 40% 12%;
+  --sidebar-border: 352 18% 80%;
+  --sidebar-primary: 345 75% 35%;
+  --sidebar-primary-foreground: 355 12% 98%;
+  --sidebar-accent: 352 20% 80%;
+  --sidebar-accent-foreground: 350 35% 18%;
+  --sidebar-ring: 345 75% 35%;
+  --popover: 358 16% 90%;
+  --popover-foreground: 350 40% 12%;
+  --popover-border: 352 18% 78%;
+  --primary: 345 75% 35%;
+  --primary-foreground: 355 12% 98%;
+  --secondary: 352 18% 80%;
+  --secondary-foreground: 350 35% 18%;
+  --muted: 355 14% 83%;
+  --muted-foreground: 350 15% 40%;
+  --accent: 348 16% 81%;
+  --accent-foreground: 350 35% 18%;
+  --input: 352 16% 70%;
+  --ring: 345 75% 35%;
+  --chart-1: 345 80% 32%;
+  --chart-2: 330 72% 38%;
+  --chart-3: 358 78% 40%;
+  --chart-4: 315 68% 35%;
+  --chart-5: 0 74% 42%;
+}
+
+/* BLOOD RAIDERS Dark Mode - Cult sanctum - DEEP WINE */
+.dark.blood {
+  --background: 350 55% 3%;
+  --foreground: 355 18% 94%;
+  --border: 352 48% 12%;
+  --card: 352 52% 5%;
+  --card-foreground: 355 18% 94%;
+  --card-border: 352 45% 10%;
+  --sidebar: 350 55% 7%;
+  --sidebar-foreground: 355 18% 94%;
+  --sidebar-border: 352 45% 11%;
+  --sidebar-primary: 345 85% 48%;
+  --sidebar-primary-foreground: 350 60% 3%;
+  --sidebar-accent: 352 45% 12%;
+  --sidebar-accent-foreground: 355 16% 86%;
+  --sidebar-ring: 345 85% 48%;
+  --popover: 352 52% 7%;
+  --popover-foreground: 355 18% 94%;
+  --popover-border: 352 45% 13%;
+  --primary: 345 85% 48%;
+  --primary-foreground: 350 60% 3%;
+  --secondary: 352 45% 12%;
+  --secondary-foreground: 355 16% 88%;
+  --muted: 350 40% 10%;
+  --muted-foreground: 352 20% 50%;
+  --accent: 352 38% 11%;
+  --accent-foreground: 355 16% 88%;
+  --input: 352 42% 18%;
+  --ring: 345 85% 48%;
+  --chart-1: 345 85% 48%;
+  --chart-2: 330 80% 52%;
+  --chart-3: 358 85% 55%;
+  --chart-4: 315 78% 48%;
+  --chart-5: 0 82% 55%;
+}
+
+/* ----------------------------------------
+   JOVE EMPIRE - ALIEN BLUE-GREEN & ENIGMATIC
+   Hyper-advanced, ethereal, enigmatic aesthetic
+   Cool alien blue-green, otherworldly glow
+   Technology eons beyond mortal understanding
+   ---------------------------------------- */
+
+/* JOVE Light Mode - Construct surface */
+.light.jove {
+  --background: 200 20% 96%;
+  --foreground: 205 28% 12%;
+  --border: 198 18% 82%;
+  --card: 202 24% 94%;
+  --card-foreground: 205 28% 12%;
+  --card-border: 198 20% 85%;
+  --sidebar: 200 22% 90%;
+  --sidebar-foreground: 205 28% 12%;
+  --sidebar-border: 198 18% 82%;
+  --sidebar-primary: 198 55% 42%;
+  --sidebar-primary-foreground: 200 15% 98%;
+  --sidebar-accent: 198 20% 82%;
+  --sidebar-accent-foreground: 205 24% 16%;
+  --sidebar-ring: 198 55% 42%;
+  --popover: 202 22% 92%;
+  --popover-foreground: 205 28% 12%;
+  --popover-border: 198 18% 80%;
+  --primary: 198 55% 42%;
+  --primary-foreground: 200 15% 98%;
+  --secondary: 198 18% 82%;
+  --secondary-foreground: 205 24% 16%;
+  --muted: 200 16% 85%;
+  --muted-foreground: 198 14% 38%;
+  --accent: 195 17% 83%;
+  --accent-foreground: 205 24% 16%;
+  --input: 198 16% 72%;
+  --ring: 198 55% 42%;
+  --chart-1: 198 60% 40%;
+  --chart-2: 185 52% 45%;
+  --chart-3: 210 58% 42%;
+  --chart-4: 172 48% 40%;
+  --chart-5: 220 50% 48%;
+}
+
+/* JOVE Dark Mode - Ancient construct depths */
+.dark.jove {
+  --background: 200 45% 4%;
+  --foreground: 198 24% 94%;
+  --border: 202 40% 14%;
+  --card: 202 44% 7%;
+  --card-foreground: 198 24% 94%;
+  --card-border: 202 38% 12%;
+  --sidebar: 200 45% 9%;
+  --sidebar-foreground: 198 24% 94%;
+  --sidebar-border: 202 38% 13%;
+  --sidebar-primary: 198 65% 55%;
+  --sidebar-primary-foreground: 200 50% 4%;
+  --sidebar-accent: 202 38% 14%;
+  --sidebar-accent-foreground: 198 22% 86%;
+  --sidebar-ring: 198 65% 55%;
+  --popover: 202 44% 9%;
+  --popover-foreground: 198 24% 94%;
+  --popover-border: 202 38% 15%;
+  --primary: 198 65% 55%;
+  --primary-foreground: 200 50% 4%;
+  --secondary: 202 38% 14%;
+  --secondary-foreground: 198 22% 88%;
+  --muted: 200 32% 12%;
+  --muted-foreground: 198 20% 52%;
+  --accent: 202 30% 13%;
+  --accent-foreground: 198 22% 88%;
+  --input: 202 36% 20%;
+  --ring: 198 65% 55%;
+  --chart-1: 198 65% 55%;
+  --chart-2: 185 60% 58%;
+  --chart-3: 210 65% 52%;
+  --chart-4: 172 55% 50%;
+  --chart-5: 220 58% 58%;
+}
+
+/* ----------------------------------------
+   SLEEPERS/DRIFTERS - ELECTRIC CYAN & ANCIENT GOLD
+   Ancient Jovian tech, mysterious, otherworldly
+   Bright electric cyans, deep void blacks, gold circuits
+   Blue overshields, doomsday beams, ancient power
+   ---------------------------------------- */
+
+/* SLEEPERS Light Mode - Awakened surface */
+.light.sleepers {
+  --background: 190 20% 96%;
+  --foreground: 195 35% 10%;
+  --border: 188 18% 82%;
+  --card: 192 24% 94%;
+  --card-foreground: 195 35% 10%;
+  --card-border: 188 20% 85%;
+  --sidebar: 190 22% 90%;
+  --sidebar-foreground: 195 35% 10%;
+  --sidebar-border: 188 18% 82%;
+  --sidebar-primary: 190 100% 40%;
+  --sidebar-primary-foreground: 190 15% 98%;
+  --sidebar-accent: 188 20% 82%;
+  --sidebar-accent-foreground: 195 30% 15%;
+  --sidebar-ring: 190 100% 40%;
+  --popover: 192 22% 92%;
+  --popover-foreground: 195 35% 10%;
+  --popover-border: 188 18% 80%;
+  --primary: 190 100% 40%;
+  --primary-foreground: 190 15% 98%;
+  --secondary: 188 18% 82%;
+  --secondary-foreground: 195 30% 15%;
+  --muted: 190 16% 85%;
+  --muted-foreground: 188 14% 40%;
+  --accent: 185 17% 83%;
+  --accent-foreground: 195 30% 15%;
+  --input: 188 16% 72%;
+  --ring: 190 100% 40%;
+  --chart-1: 190 100% 40%;
+  --chart-2: 45 85% 50%;
+  --chart-3: 175 95% 42%;
+  --chart-4: 210 90% 48%;
+  --chart-5: 60 80% 52%;
+}
+
+/* SLEEPERS Dark Mode - Ancient structure depths - ELECTRIC */
+.dark.sleepers {
+  --background: 195 55% 3%;
+  --foreground: 190 22% 94%;
+  --border: 192 45% 12%;
+  --card: 194 50% 5%;
+  --card-foreground: 190 22% 94%;
+  --card-border: 192 42% 10%;
+  --sidebar: 195 55% 7%;
+  --sidebar-foreground: 190 22% 94%;
+  --sidebar-border: 192 42% 11%;
+  --sidebar-primary: 190 100% 52%;
+  --sidebar-primary-foreground: 195 60% 3%;
+  --sidebar-accent: 192 42% 12%;
+  --sidebar-accent-foreground: 190 20% 86%;
+  --sidebar-ring: 190 100% 52%;
+  --popover: 194 50% 7%;
+  --popover-foreground: 190 22% 94%;
+  --popover-border: 192 42% 13%;
+  --primary: 190 100% 52%;
+  --primary-foreground: 195 60% 3%;
+  --secondary: 192 42% 12%;
+  --secondary-foreground: 190 20% 88%;
+  --muted: 195 38% 10%;
+  --muted-foreground: 190 18% 50%;
+  --accent: 192 36% 11%;
+  --accent-foreground: 190 20% 88%;
+  --input: 192 40% 18%;
+  --ring: 190 100% 52%;
+  --chart-1: 190 100% 52%;
+  --chart-2: 45 90% 58%;
+  --chart-3: 175 100% 50%;
+  --chart-4: 210 95% 58%;
+  --chart-5: 60 85% 60%;
+}
+
+/* ----------------------------------------
+   SISTERS OF EVE - White & Red Medical
+   Humanitarian, scientific, exploration aesthetic
+   Pure whites, medical reds, research focus
+   ---------------------------------------- */
+
+/* SISTERS Light Mode - Medical facility */
+.light.sisters {
+  --background: 0 0% 98%;
+  --foreground: 350 20% 14%;
+  --border: 0 0% 88%;
+  --card: 0 0% 96%;
+  --card-foreground: 350 20% 14%;
+  --card-border: 0 0% 90%;
+  --sidebar: 355 8% 94%;
+  --sidebar-foreground: 350 20% 14%;
+  --sidebar-border: 0 0% 88%;
+  --sidebar-primary: 350 70% 48%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 0 0% 88%;
+  --sidebar-accent-foreground: 350 18% 18%;
+  --sidebar-ring: 350 70% 48%;
+  --popover: 0 0% 95%;
+  --popover-foreground: 350 20% 14%;
+  --popover-border: 0 0% 86%;
+  --primary: 350 70% 48%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 88%;
+  --secondary-foreground: 350 18% 18%;
+  --muted: 0 0% 90%;
+  --muted-foreground: 350 10% 40%;
+  --accent: 355 6% 87%;
+  --accent-foreground: 350 18% 18%;
+  --input: 0 0% 78%;
+  --ring: 350 70% 48%;
+  --chart-1: 350 75% 45%;
+  --chart-2: 0 0% 50%;
+  --chart-3: 340 68% 52%;
+  --chart-4: 15 72% 48%;
+  --chart-5: 330 65% 50%;
+}
+
+/* SISTERS Dark Mode - Deep space research */
+.dark.sisters {
+  --background: 350 30% 5%;
+  --foreground: 0 0% 96%;
+  --border: 355 25% 14%;
+  --card: 352 28% 8%;
+  --card-foreground: 0 0% 96%;
+  --card-border: 355 23% 12%;
+  --sidebar: 350 30% 9%;
+  --sidebar-foreground: 0 0% 96%;
+  --sidebar-border: 355 23% 13%;
+  --sidebar-primary: 350 78% 55%;
+  --sidebar-primary-foreground: 350 30% 5%;
+  --sidebar-accent: 355 23% 14%;
+  --sidebar-accent-foreground: 0 0% 90%;
+  --sidebar-ring: 350 78% 55%;
+  --popover: 352 28% 10%;
+  --popover-foreground: 0 0% 96%;
+  --popover-border: 355 23% 15%;
+  --primary: 350 78% 55%;
+  --primary-foreground: 350 30% 5%;
+  --secondary: 355 23% 14%;
+  --secondary-foreground: 0 0% 92%;
+  --muted: 350 20% 12%;
+  --muted-foreground: 355 12% 55%;
+  --accent: 355 18% 13%;
+  --accent-foreground: 0 0% 92%;
+  --input: 355 22% 20%;
+  --ring: 350 78% 55%;
+  --chart-1: 350 78% 55%;
+  --chart-2: 0 0% 60%;
+  --chart-3: 340 75% 60%;
+  --chart-4: 15 78% 58%;
+  --chart-5: 330 72% 58%;
+}
+
+/* ----------------------------------------
+   ORE - BRIGHT INDUSTRIAL YELLOW & MINING GRAY
+   Industrial, mining, resource extraction
+   Blazing yellow-orange, steel grays, utilitarian
+   Digmaster Blazon aesthetic
+   ---------------------------------------- */
+
+/* ORE Light Mode - Mining facility surface */
+.light.ore {
+  --background: 48 18% 96%;
+  --foreground: 45 24% 14%;
+  --border: 50 16% 82%;
+  --card: 52 22% 94%;
+  --card-foreground: 45 24% 14%;
+  --card-border: 50 18% 86%;
+  --sidebar: 48 20% 90%;
+  --sidebar-foreground: 45 24% 14%;
+  --sidebar-border: 50 16% 82%;
+  --sidebar-primary: 48 90% 50%;
+  --sidebar-primary-foreground: 48 20% 10%;
+  --sidebar-accent: 50 18% 82%;
+  --sidebar-accent-foreground: 45 22% 18%;
+  --sidebar-ring: 48 90% 50%;
+  --popover: 52 20% 92%;
+  --popover-foreground: 45 24% 14%;
+  --popover-border: 50 16% 80%;
+  --primary: 48 90% 50%;
+  --primary-foreground: 48 20% 10%;
+  --secondary: 50 16% 82%;
+  --secondary-foreground: 45 22% 18%;
+  --muted: 52 14% 85%;
+  --muted-foreground: 48 12% 38%;
+  --accent: 55 15% 83%;
+  --accent-foreground: 45 22% 18%;
+  --input: 50 14% 72%;
+  --ring: 48 90% 50%;
+  --chart-1: 48 95% 48%;
+  --chart-2: 35 85% 45%;
+  --chart-3: 62 88% 48%;
+  --chart-4: 25 78% 42%;
+  --chart-5: 75 80% 52%;
+}
+
+/* ORE Dark Mode - Deep asteroid mining */
+.dark.ore {
+  --background: 45 40% 5%;
+  --foreground: 50 22% 94%;
+  --border: 48 35% 14%;
+  --card: 48 38% 8%;
+  --card-foreground: 50 22% 94%;
+  --card-border: 48 32% 12%;
+  --sidebar: 45 40% 9%;
+  --sidebar-foreground: 50 22% 94%;
+  --sidebar-border: 48 32% 13%;
+  --sidebar-primary: 48 95% 55%;
+  --sidebar-primary-foreground: 45 45% 5%;
+  --sidebar-accent: 48 32% 14%;
+  --sidebar-accent-foreground: 50 20% 88%;
+  --sidebar-ring: 48 95% 55%;
+  --popover: 48 38% 10%;
+  --popover-foreground: 50 22% 94%;
+  --popover-border: 48 32% 15%;
+  --primary: 48 95% 55%;
+  --primary-foreground: 45 45% 5%;
+  --secondary: 48 32% 14%;
+  --secondary-foreground: 50 20% 90%;
+  --muted: 45 28% 12%;
+  --muted-foreground: 48 18% 52%;
+  --accent: 48 26% 13%;
+  --accent-foreground: 50 20% 90%;
+  --input: 48 30% 20%;
+  --ring: 48 95% 55%;
+  --chart-1: 48 95% 55%;
+  --chart-2: 35 88% 55%;
+  --chart-3: 62 92% 58%;
+  --chart-4: 25 82% 52%;
+  --chart-5: 75 85% 60%;
+}
+
+/* ----------------------------------------
+   SCOPE NETWORK - NEWS BROADCAST STYLE
+   Red & white professional news aesthetic
+   Clean, authoritative, breaking news feel
+   ---------------------------------------- */
+
+/* SCOPE Light Mode - Bright studio */
+.light.scope {
+  --background: 0 0% 98%;
+  --foreground: 0 0% 10%;
+  --border: 0 0% 88%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 10%;
+  --card-border: 0 0% 90%;
+  --sidebar: 0 5% 96%;
+  --sidebar-foreground: 0 0% 10%;
+  --sidebar-border: 0 0% 88%;
+  --sidebar-primary: 0 85% 45%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 90%;
+  --sidebar-accent-foreground: 0 0% 15%;
+  --sidebar-ring: 0 85% 45%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 10%;
+  --popover-border: 0 0% 88%;
+  --primary: 0 85% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 92%;
+  --secondary-foreground: 0 0% 15%;
+  --muted: 0 0% 94%;
+  --muted-foreground: 0 0% 40%;
+  --accent: 0 5% 90%;
+  --accent-foreground: 0 0% 15%;
+  --input: 0 0% 82%;
+  --ring: 0 85% 45%;
+  --chart-1: 0 85% 45%;
+  --chart-2: 0 0% 40%;
+  --chart-3: 15 80% 50%;
+  --chart-4: 0 70% 55%;
+  --chart-5: 345 75% 48%;
+}
+
+/* SCOPE Dark Mode - Breaking news */
+.dark.scope {
+  --background: 0 0% 4%;
+  --foreground: 0 0% 96%;
+  --border: 0 0% 15%;
+  --card: 0 0% 7%;
+  --card-foreground: 0 0% 96%;
+  --card-border: 0 0% 12%;
+  --sidebar: 0 0% 6%;
+  --sidebar-foreground: 0 0% 96%;
+  --sidebar-border: 0 0% 14%;
+  --sidebar-primary: 0 90% 55%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 14%;
+  --sidebar-accent-foreground: 0 0% 90%;
+  --sidebar-ring: 0 90% 55%;
+  --popover: 0 0% 8%;
+  --popover-foreground: 0 0% 96%;
+  --popover-border: 0 0% 16%;
+  --primary: 0 90% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 14%;
+  --secondary-foreground: 0 0% 92%;
+  --muted: 0 0% 12%;
+  --muted-foreground: 0 0% 55%;
+  --accent: 0 5% 13%;
+  --accent-foreground: 0 0% 92%;
+  --input: 0 0% 20%;
+  --ring: 0 90% 55%;
+  --chart-1: 0 90% 55%;
+  --chart-2: 0 0% 60%;
+  --chart-3: 15 85% 58%;
+  --chart-4: 0 75% 62%;
+  --chart-5: 345 80% 55%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* ============================================
+   PHOTON UI ENHANCEMENTS
+   EVE-inspired visual polish
+   ============================================ */
+
+/* Subtle card glow on hover */
+.card-glow {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.card-glow:hover {
+  box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.15),
+              0 0 40px -10px hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+/* Primary accent glow for important elements */
+.accent-glow {
+  box-shadow: 0 0 10px -2px hsl(var(--primary) / 0.3),
+              0 0 20px -5px hsl(var(--primary) / 0.2);
+}
+
+/* Animated pulse glow for alerts/notifications */
+.pulse-glow {
+  animation: pulse-glow-animation 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow-animation {
+  0%, 100% {
+    box-shadow: 0 0 5px 0px hsl(var(--primary) / 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px 2px hsl(var(--primary) / 0.4);
+  }
+}
+
+/* Tech border effect - angular corners */
+.tech-border {
+  position: relative;
+  background: linear-gradient(135deg,
+    hsl(var(--card)) 0%,
+    hsl(var(--card)) 100%);
+}
+
+.tech-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg,
+    hsl(var(--primary) / 0.5) 0%,
+    hsl(var(--border)) 50%,
+    hsl(var(--primary) / 0.3) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Data display styling - monospace with subtle background */
+.data-display {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  background: hsl(var(--muted) / 0.5);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+/* ISK value styling */
+.isk-value {
+  color: hsl(var(--primary));
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.isk-positive {
+  color: hsl(142 76% 45%);
+}
+
+.isk-negative {
+  color: hsl(0 84% 60%);
+}
+
+/* Subtle scanline effect for that EVE feel (optional, use sparingly) */
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    hsl(var(--foreground) / 0.02) 2px,
+    hsl(var(--foreground) / 0.02) 4px
+  );
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Holographic shimmer effect */
+.holo-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.holo-shimmer::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    hsl(var(--primary) / 0.1) 50%,
+    transparent 60%
+  );
+  animation: holo-shimmer-animation 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes holo-shimmer-animation {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
+
+/* Status indicator dots */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.online {
+  background: hsl(142 76% 45%);
+  box-shadow: 0 0 8px hsl(142 76% 45% / 0.6);
+}
+
+.status-dot.offline {
+  background: hsl(var(--muted-foreground));
+}
+
+.status-dot.warning {
+  background: hsl(38 92% 50%);
+  box-shadow: 0 0 8px hsl(38 92% 50% / 0.6);
+}
+
+.status-dot.error {
+  background: hsl(0 84% 60%);
+  box-shadow: 0 0 8px hsl(0 84% 60% / 0.6);
+  animation: status-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Progress bar with glow */
+.progress-glow {
+  position: relative;
+  overflow: hidden;
+  background: hsl(var(--muted));
+  border-radius: 9999px;
+}
+
+.progress-glow .progress-fill {
+  background: linear-gradient(90deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary) / 0.8) 100%);
+  box-shadow: 0 0 10px hsl(var(--primary) / 0.5);
+  transition: width 0.5s ease;
+}
+
+/* Neocom-style sidebar item active state */
+.neocom-active {
+  position: relative;
+  background: linear-gradient(90deg,
+    hsl(var(--primary) / 0.15) 0%,
+    transparent 100%);
+}
+
+.neocom-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: hsl(var(--primary));
+  box-shadow: 0 0 10px hsl(var(--primary) / 0.8);
+}
+
+/* ============================================
+   ANIMATED SPACE BACKGROUNDS
+   EVE Online inspired atmospheric effects
+   ============================================ */
+
+/* Ensure #root sits above the background effect layer */
+#root {
+  position: relative;
+  z-index: 2;
+}
+
+/* Star Field Background - rendered via BackgroundEffect portal on document.body */
+.bg-effect-starfield {
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20px 30px, hsl(var(--foreground) / 0.7), transparent),
+    radial-gradient(1px 1px at 40px 70px, hsl(var(--foreground) / 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 50px 160px, hsl(var(--foreground) / 0.7), transparent),
+    radial-gradient(1px 1px at 90px 40px, hsl(var(--foreground) / 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 130px 80px, hsl(var(--foreground) / 0.6), transparent),
+    radial-gradient(2px 2px at 160px 120px, hsl(var(--primary) / 0.8), transparent),
+    radial-gradient(1px 1px at 200px 50px, hsl(var(--foreground) / 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 220px 140px, hsl(var(--foreground) / 0.6), transparent),
+    radial-gradient(1px 1px at 260px 90px, hsl(var(--foreground) / 0.5), transparent),
+    radial-gradient(2px 2px at 300px 170px, hsl(var(--primary) / 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 340px 60px, hsl(var(--foreground) / 0.6), transparent),
+    radial-gradient(1px 1px at 380px 130px, hsl(var(--foreground) / 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 420px 20px, hsl(var(--foreground) / 0.7), transparent),
+    radial-gradient(1px 1px at 460px 100px, hsl(var(--foreground) / 0.5), transparent),
+    radial-gradient(2px 2px at 500px 150px, hsl(var(--primary) / 0.8), transparent),
+    radial-gradient(1px 1px at 70px 110px, hsl(var(--foreground) / 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 150px 40px, hsl(var(--foreground) / 0.6), transparent),
+    radial-gradient(1px 1px at 280px 150px, hsl(var(--primary) / 0.5), transparent),
+    radial-gradient(2px 2px at 400px 80px, hsl(var(--primary) / 0.7), transparent),
+    radial-gradient(1px 1px at 480px 170px, hsl(var(--foreground) / 0.4), transparent);
+  background-size: 520px 200px;
+  animation: starfield-twinkle 6s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes starfield-twinkle {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+/* Nebula Background - rendered via BackgroundEffect component as a top-level overlay */
+.bg-effect-nebula {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, hsl(var(--primary) / 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, hsl(var(--primary) / 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 60% at 50% 80%, hsl(var(--primary) / 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 45% at 60% 20%, hsl(var(--primary) / 0.1) 0%, transparent 50%);
+  animation: nebula-drift 30s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes nebula-drift {
+  0% {
+    transform: translateX(0) translateY(0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateX(-20px) translateY(10px) scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(10px) translateY(-10px) scale(1);
+    opacity: 0.9;
+  }
+}
+
+/* Combined starfield + nebula - rendered via BackgroundEffect component as a top-level overlay */
+.bg-effect-space {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bg-effect-space::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, hsl(var(--primary) / 0.18) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, hsl(var(--primary) / 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 45% at 60% 20%, hsl(var(--primary) / 0.08) 0%, transparent 50%);
+  animation: nebula-drift 30s ease-in-out infinite alternate;
+}
+
+.bg-effect-space::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20px 30px, hsl(var(--foreground) / 0.6), transparent),
+    radial-gradient(1px 1px at 40px 70px, hsl(var(--foreground) / 0.45), transparent),
+    radial-gradient(1.5px 1.5px at 50px 160px, hsl(var(--foreground) / 0.6), transparent),
+    radial-gradient(1px 1px at 90px 40px, hsl(var(--foreground) / 0.45), transparent),
+    radial-gradient(1.5px 1.5px at 130px 80px, hsl(var(--foreground) / 0.55), transparent),
+    radial-gradient(2px 2px at 160px 120px, hsl(var(--primary) / 0.75), transparent),
+    radial-gradient(1px 1px at 200px 50px, hsl(var(--foreground) / 0.45), transparent),
+    radial-gradient(1.5px 1.5px at 220px 140px, hsl(var(--foreground) / 0.55), transparent),
+    radial-gradient(1px 1px at 260px 90px, hsl(var(--foreground) / 0.45), transparent),
+    radial-gradient(2px 2px at 300px 170px, hsl(var(--primary) / 0.65), transparent),
+    radial-gradient(1.5px 1.5px at 340px 60px, hsl(var(--foreground) / 0.55), transparent),
+    radial-gradient(1px 1px at 380px 130px, hsl(var(--foreground) / 0.45), transparent),
+    radial-gradient(1px 1px at 70px 110px, hsl(var(--foreground) / 0.4), transparent),
+    radial-gradient(2px 2px at 400px 80px, hsl(var(--primary) / 0.7), transparent);
+  background-size: 420px 200px;
+  animation: starfield-twinkle 6s ease-in-out infinite alternate;
+}
+
+/* ============================================
+   EVE FITTING SLOT COLORS
+   Match in-game fitting window colors
+   ============================================ */
+
+.slot-high {
+  color: hsl(0 70% 55%);
+  border-color: hsl(0 70% 55% / 0.5);
+}
+
+.slot-high-bg {
+  background: hsl(0 70% 55% / 0.15);
+  border-left: 3px solid hsl(0 70% 55%);
+}
+
+.slot-med {
+  color: hsl(210 80% 55%);
+  border-color: hsl(210 80% 55% / 0.5);
+}
+
+.slot-med-bg {
+  background: hsl(210 80% 55% / 0.15);
+  border-left: 3px solid hsl(210 80% 55%);
+}
+
+.slot-low {
+  color: hsl(45 80% 50%);
+  border-color: hsl(45 80% 50% / 0.5);
+}
+
+.slot-low-bg {
+  background: hsl(45 80% 50% / 0.15);
+  border-left: 3px solid hsl(45 80% 50%);
+}
+
+.slot-rig {
+  color: hsl(280 60% 60%);
+  border-color: hsl(280 60% 60% / 0.5);
+}
+
+.slot-rig-bg {
+  background: hsl(280 60% 60% / 0.15);
+  border-left: 3px solid hsl(280 60% 60%);
+}
+
+.slot-subsystem {
+  color: hsl(160 60% 50%);
+  border-color: hsl(160 60% 50% / 0.5);
+}
+
+.slot-subsystem-bg {
+  background: hsl(160 60% 50% / 0.15);
+  border-left: 3px solid hsl(160 60% 50%);
+}
+
+.slot-drone {
+  color: hsl(30 70% 55%);
+  border-color: hsl(30 70% 55% / 0.5);
+}
+
+.slot-drone-bg {
+  background: hsl(30 70% 55% / 0.15);
+  border-left: 3px solid hsl(30 70% 55%);
+}
+
+/**
+ * Using the elevate system.
+ * Automatic contrast adjustment.
+ *
+ * <element className="hover-elevate" />
+ * <element className="active-elevate-2" />
+ *
+ * // Using the tailwind utility when a data attribute is "on"
+ * <element className="toggle-elevate data-[state=on]:toggle-elevated" />
+ * // Or manually controlling the toggle state
+ * <element className="toggle-elevate toggle-elevated" />
+ *
+ * Elevation systems have to handle many states.
+ * - not-hovered, vs. hovered vs. active  (three mutually exclusive states)
+ * - toggled or not
+ * - focused or not (this is not handled with these utilities)
+ *
+ * Even without handling focused or not, this is six possible combinations that
+ * need to be distinguished from eachother visually.
+ */
+@layer utilities {
+
+  /* Hide ugly search cancel button in Chrome until we can style it properly */
+  input[type="search"]::-webkit-search-cancel-button {
+    @apply hidden;
+  }
+
+  /* Placeholder styling for contentEditable div */
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
+
+  /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
+   * buttons/badges can remove the automatic brightness adjustment on interactions
+   * and program their own. */
+  .no-default-hover-elevate {}
+
+  .no-default-active-elevate {}
+
+
+  /**
+   * Toggleable backgrounds go behind the content. Hoverable/active goes on top.
+   * This way they can stack/compound. Both will overlap the parent's borders!
+   * So borders will be automatically adjusted both on toggle, and hover/active,
+   * and they will be compounded.
+   */
+  .toggle-elevate::before,
+  .toggle-elevate-2::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    /*border-radius: inherit;   match rounded corners */
+    border-radius: inherit;
+    z-index: -1;
+    /* sits behind content but above backdrop */
+  }
+
+  .toggle-elevate.toggle-elevated::before {
+    background-color: var(--elevate-2);
+  }
+
+  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
+  .border.toggle-elevate::before {
+    inset: -1px;
+  }
+
+  /* Does not work on elements with overflow:hidden! */
+  .hover-elevate:not(.no-default-hover-elevate),
+  .active-elevate:not(.no-default-active-elevate),
+  .hover-elevate-2:not(.no-default-hover-elevate),
+  .active-elevate-2:not(.no-default-active-elevate) {
+    position: relative;
+    z-index: 0;
+  }
+
+  .hover-elevate:not(.no-default-hover-elevate)::after,
+  .active-elevate:not(.no-default-active-elevate)::after,
+  .hover-elevate-2:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:not(.no-default-active-elevate)::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0px;
+    /*border-radius: inherit;   match rounded corners */
+    border-radius: inherit;
+    z-index: 999;
+    /* sits in front of content */
+  }
+
+  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-1);
+  }
+
+  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
+  .active-elevate-2:active:not(.no-default-active-elevate)::after {
+    background-color: var(--elevate-2);
+  }
+
+  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
+  .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
+    inset: -1px;
+  }
+}

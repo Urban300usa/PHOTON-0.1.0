@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metenox Moon Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+const ORE_DATA = {
+  45490: { name: "Zeolites", rarity: "R4", material: "Atmospheric Gases", yield: 65 },
+  45491: { name: "Sylvite", rarity: "R4", material: "Evaporite Deposits", yield: 65 },
+  45492: { name: "Bitumens", rarity: "R4", material: "Hydrocarbons", yield: 65 },
+  45493: { name: "Coesite", rarity: "R4", material: "Silicates", yield: 65 },
+  45494: { name: "Cobaltite", rarity: "R8", material: "Cobalt", yield: 40 },
+  45495: { name: "Euxenite", rarity: "R8", material: "Scandium", yield: 40 },
+  45496: { name: "Titanite", rarity: "R8", material: "Titanium", yield: 40 },
+  45497: { name: "Scheelite", rarity: "R8", material: "Tungsten", yield: 40 },
+  45498: { name: "Chromite", rarity: "R16", material: "Chromium", yield: 40 },
+  45499: { name: "Sperrylite", rarity: "R16", material: "Platinum", yield: 40 },
+  45500: { name: "Vanadinite", rarity: "R16", material: "Vanadium", yield: 40 },
+  45501: { name: "Otavite", rarity: "R16", material: "Cadmium", yield: 40 },
+  45502: { name: "Carnotite", rarity: "R32", material: "Technetium", yield: 50 },
+  45503: { name: "Cinnabar", rarity: "R32", material: "Mercury", yield: 50 },
+  45504: { name: "Pollucite", rarity: "R32", material: "Caesium", yield: 50 },
+  45506: { name: "Zircon", rarity: "R32", material: "Hafnium", yield: 50 },
+  45510: { name: "Monazite", rarity: "R64", material: "Neodymium", yield: 22 },
+  45511: { name: "Loparite", rarity: "R64", material: "Promethium", yield: 22 },
+  45512: { name: "Ytterbite", rarity: "R64", material: "Thulium", yield: 22 },
+  45513: { name: "Xenotime", rarity: "R64", material: "Dysprosium", yield: 22 },
+};
+
+const ORE_NAME_TO_ID = Object.fromEntries(
+  Object.entries(ORE_DATA).map(([id, data]) => [data.name.toLowerCase(), parseInt(id)])
+);
+
+const RARITY_RANK = { R4: 1, R8: 2, R16: 3, R32: 4, R64: 5 };
+
+const DEFAULT_PRICES = {
+  "Atmospheric Gases": 0,
+  "Evaporite Deposits": 0,
+  "Hydrocarbons": 0,
+  "Silicates": 0,
+  "Cobalt": 0,
+  "Scandium": 0,
+  "Titanium": 0,
+  "Tungsten": 0,
+  "Cadmium": 0,
+  "Chromium": 0,
+  "Platinum": 0,
+  "Vanadium": 0,
+  "Caesium": 0,
+  "Hafnium": 0,
+  "Mercury": 0,
+  "Technetium": 0,
+  "Dysprosium": 0,
+  "Neodymium": 0,
+  "Promethium": 0,
+  "Thulium": 0,
+};
+
+const MATERIAL_NAMES = [
+  "Atmospheric Gases", "Evaporite Deposits", "Hydrocarbons", "Silicates",
+  "Cobalt", "Scandium", "Titanium", "Tungsten",
+  "Cadmium", "Chromium", "Platinum", "Vanadium",
+  "Caesium", "Hafnium", "Mercury", "Technetium",
+  "Dysprosium", "Neodymium", "Promethium", "Thulium",
+];
+
+const ATHANOR_RATE = 30000;
+const HOURS_PER_MONTH = 720;
+const METENOX_EFFICIENCY = 0.40;
+const METENOX_MONTHLY_M3 = ATHANOR_RATE * HOURS_PER_MONTH * METENOX_EFFICIENCY;
+
+function parseProbeData(rawText) {
+  const lines = rawText.trim().split('\n');
+  const moons = [];
+  let currentMoon = null;
+  let currentSystem = null;
+  
+  for (const line of lines) {
+    if (line.startsWith('Moon\t') || line.includes('Moon Product')) continue;
+    
+    const parts = line.split('\t');
+    
+    if (parts[0] && parts[0].includes(' - Moon ') && !parts[1]) {
+      const moonName = parts[0].trim();
+      const systemMatch = moonName.match(/^([A-Z0-9-]+)/);
+      currentSystem = systemMatch ? systemMatch[1] : 'Unknown';
+      currentMoon = { name: moonName, system: currentSystem, ores: [] };
+      moons.push(currentMoon);
+    }
+    else if (currentMoon) {
+      let oreName, quantity, typeId;
+      
+      if (parts[1] && parts[2]) {
+        oreName = parts[1].trim();
+        quantity = parseFloat(parts[2]);
+        typeId = parseInt(parts[3]);
+      } else if (parts[0] && parts[1]) {
+        oreName = parts[0].trim();
+        quantity = parseFloat(parts[1]);
+        typeId = parseInt(parts[2]);
+      }
+      
+      if (oreName && !isNaN(quantity) && quantity > 0) {
+        let oreInfo = ORE_DATA[typeId];
+        if (!oreInfo) {
+          const lookupId = ORE_NAME_TO_ID[oreName.toLowerCase()];
+          if (lookupId) {
+            oreInfo = ORE_DATA[lookupId];
+            typeId = lookupId;
+          }
+        }
+        
+        if (oreInfo) {
+          currentMoon.ores.push({
+            name: oreInfo.name,
+            quantity,
+            rarity: oreInfo.rarity,
+            material: oreInfo.material,
+            yield: oreInfo.yield,
+            typeId
+          });
+        }
+      }
+    }
+  }
+  
+  return moons.filter(m => m.ores.length > 0);
+}
+
+function calculateMoonValue(moon, prices) {
+  let totalIsk = 0;
+  const oreValues = [];
+  
+  for (const ore of moon.ores) {
+    const units = METENOX_MONTHLY_M3 * ore.quantity * (ore.yield / 1000);
+    const price = prices[ore.material] || 0;
+    const isk = units * price;
+    totalIsk += isk;
+    oreValues.push({ ...ore, units, isk });
+  }
+  
+  const bestOre = moon.ores.reduce((best, ore) => 
+    (RARITY_RANK[ore.rarity] > RARITY_RANK[best.rarity]) ? ore : best
+  , moon.ores[0]);
+  
+  return {
+    ...moon,
+    oreValues,
+    totalIsk,
+    bestOre: bestOre.name,
+    bestRarity: bestOre.rarity,
+    hasR8Plus: moon.ores.some(o => RARITY_RANK[o.rarity] >= 2)
+  };
+}
+
+function formatIsk(value) {
+  if (value >= 1e9) return (value / 1e9).toFixed(2) + 'B';
+  if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+  if (value >= 1e3) return (value / 1e3).toFixed(0) + 'K';
+  return value.toFixed(0);
+}
+
+function MetenoxCalculator() {
+  const [rawInput, setRawInput] = useState('');
+  const [moons, setMoons] = useState([]);
+  const [prices, setPrices] = useState(DEFAULT_PRICES);
+  const [sortField, setSortField] = useState('totalIsk');
+  const [sortDir, setSortDir] = useState('desc');
+  const [filterSystem, setFilterSystem] = useState('');
+  const [filterRarity, setFilterRarity] = useState('');
+  const [showPrices, setShowPrices] = useState(false);
+  const [selectedMoon, setSelectedMoon] = useState(null);
+  const [priceError, setPriceError] = useState(null);
+  const [lastPriceUpdate, setLastPriceUpdate] = useState(null);
+  const [showPriceImport, setShowPriceImport] = useState(false);
+  const [priceImportText, setPriceImportText] = useState('');
+  
+  useEffect(() => {
+    const savedMoons = localStorage.getItem('metenox_moons');
+    const savedPrices = localStorage.getItem('metenox_prices');
+    const savedPriceUpdate = localStorage.getItem('metenox_price_update');
+    if (savedMoons) setMoons(JSON.parse(savedMoons));
+    if (savedPrices) setPrices(JSON.parse(savedPrices));
+    if (savedPriceUpdate) setLastPriceUpdate(savedPriceUpdate);
+  }, []);
+  
+  useEffect(() => {
+    if (moons.length > 0) {
+      localStorage.setItem('metenox_moons', JSON.stringify(moons));
+    }
+  }, [moons]);
+  
+  useEffect(() => {
+    localStorage.setItem('metenox_prices', JSON.stringify(prices));
+  }, [prices]);
+  
+  const fetchJanicePrices = async () => {
+    const itemList = MATERIAL_NAMES.map(m => `${m} 1`).join('\n');
+    try {
+      await navigator.clipboard.writeText(itemList);
+      alert('Material list copied! Now:\n1. Go to janice.e-351.com\n2. Paste (Ctrl+V)\n3. Click "Copy" button on the results\n4. Come back here and click "Paste Janice Prices"');
+      window.open('https://janice.e-351.com', '_blank');
+    } catch (err) {
+      setShowPriceImport(true);
+      setPriceImportText(itemList);
+    }
+  };
+
+  const parseJanicePaste = (text) => {
+    const lines = text.trim().split('\n');
+    const newPrices = { ...prices };
+    let updated = 0;
+    
+    for (const line of lines) {
+      const parts = line.split('\t');
+      if (parts.length >= 4) {
+        const name = parts[0].trim();
+        const buyPrice = parseFloat(parts[3]?.replace(/,/g, '')) || 
+                         parseFloat(parts[4]?.replace(/,/g, '')) || 0;
+        
+        if (MATERIAL_NAMES.includes(name) && buyPrice > 0) {
+          newPrices[name] = buyPrice;
+          updated++;
+        }
+      }
+    }
+    
+    if (updated > 0) {
+      setPrices(newPrices);
+      const updateTime = new Date().toISOString();
+      setLastPriceUpdate(updateTime);
+      localStorage.setItem('metenox_price_update', updateTime);
+      setShowPriceImport(false);
+      setPriceImportText('');
+      setPriceError(null);
+    } else {
+      setPriceError(`Could not parse prices. Got ${lines.length} lines but matched 0 materials.`);
+    }
+  };
+
+  const handlePaste = () => {
+    const parsed = parseProbeData(rawInput);
+    if (parsed.length > 0) {
+      const existingNames = new Set(moons.map(m => m.name));
+      const newMoons = parsed.filter(m => !existingNames.has(m.name));
+      setMoons([...moons, ...newMoons]);
+      setRawInput('');
+    }
+  };
+  
+  const handleClearAll = () => {
+    if (confirm('Clear all moon data?')) {
+      setMoons([]);
+      localStorage.removeItem('metenox_moons');
+    }
+  };
+  
+  const handlePriceChange = (material, value) => {
+    setPrices(prev => ({ ...prev, [material]: parseFloat(value) || 0 }));
+  };
+  
+  const calculatedMoons = useMemo(() => {
+    return moons.map(m => calculateMoonValue(m, prices));
+  }, [moons, prices]);
+  
+  const systems = useMemo(() => {
+    return [...new Set(moons.map(m => m.system))].sort();
+  }, [moons]);
+  
+  const displayMoons = useMemo(() => {
+    let filtered = calculatedMoons;
+    
+    if (filterSystem) {
+      filtered = filtered.filter(m => m.system === filterSystem);
+    }
+    if (filterRarity) {
+      filtered = filtered.filter(m => RARITY_RANK[m.bestRarity] >= RARITY_RANK[filterRarity]);
+    }
+    
+    filtered.sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+      if (typeof aVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+      }
+      if (sortDir === 'asc') return aVal > bVal ? 1 : -1;
+      return aVal < bVal ? 1 : -1;
+    });
+    
+    return filtered;
+  }, [calculatedMoons, filterSystem, filterRarity, sortField, sortDir]);
+  
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('desc');
+    }
+  };
+  
+  const exportCsv = () => {
+    const headers = ['Moon', 'System', 'Total ISK/Month', 'Best Ore', 'Rarity', 'Ore Count'];
+    const rows = displayMoons.map(m => [
+      m.name, m.system, m.totalIsk.toFixed(0), m.bestOre, m.bestRarity, m.ores.length
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'metenox_moons.csv';
+    a.click();
+  };
+
+  const exportJson = () => {
+    const data = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      prices,
+      moons
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'metenox_data.json';
+    a.click();
+  };
+
+  const [showJsonImport, setShowJsonImport] = useState(false);
+  const [jsonImportText, setJsonImportText] = useState('');
+
+  const importJson = () => {
+    try {
+      const data = JSON.parse(jsonImportText);
+      if (data.moons && Array.isArray(data.moons)) {
+        const existingNames = new Set(moons.map(m => m.name));
+        const newMoons = data.moons.filter(m => !existingNames.has(m.name));
+        setMoons([...moons, ...newMoons]);
+        if (data.prices) {
+          setPrices(prev => ({ ...prev, ...data.prices }));
+        }
+        setShowJsonImport(false);
+        setJsonImportText('');
+        setPriceError(null);
+        alert(`Imported ${newMoons.length} new moons (${data.moons.length - newMoons.length} duplicates skipped)`);
+      } else {
+        setPriceError('Invalid JSON format - missing moons array');
+      }
+    } catch (err) {
+      setPriceError(`JSON parse error: ${err.message}`);
+    }
+  };
+
+  const copyMarkdown = async () => {
+    const lines = [
+      '| Moon | System | ISK/Month | Best Ore | Rarity |',
+      '|------|--------|-----------|----------|--------|',
+      ...displayMoons.map(m => 
+        `| ${m.name} | ${m.system} | ${formatIsk(m.totalIsk)} | ${m.bestOre} | ${m.bestRarity} |`
+      )
+    ];
+    const markdown = lines.join('\n');
+    try {
+      await navigator.clipboard.writeText(markdown);
+      alert('Markdown table copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      setPriceError('Failed to copy to clipboard');
+    }
+  };
+
+  const SortIcon = ({ field }) => {
+    if (sortField !== field) return <span className="text-gray-300 ml-1">↕</span>;
+    return <span className="ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>;
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-gray-100 p-4">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-orange-400 mb-2">Metenox Moon Calculator</h1>
+        <p className="text-gray-400 mb-6">Paste EVE probe scan data to calculate monthly ISK values</p>
+        
+        <div className="bg-gray-800 rounded-lg p-4 mb-6">
+          <h2 className="text-lg font-semibold mb-2">Import Moon Scans</h2>
+          <textarea
+            className="w-full h-32 bg-gray-700 text-gray-100 rounded p-2 font-mono text-sm mb-2"
+            placeholder="Paste raw probe scan data here (Ctrl+V from EVE's 'Copy to Clipboard')..."
+            value={rawInput}
+            onChange={(e) => setRawInput(e.target.value)}
+          />
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={handlePaste} className="bg-orange-600 hover:bg-orange-500 px-4 py-2 rounded font-semibold">
+              Add Moons
+            </button>
+            <button onClick={fetchJanicePrices} className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-semibold">
+              Update Prices → Janice
+            </button>
+            <button onClick={() => setShowPriceImport(true)} className="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded">
+              Paste Janice Prices
+            </button>
+            <button onClick={() => setShowPrices(!showPrices)} className="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">
+              {showPrices ? 'Hide' : 'Edit'} Prices
+            </button>
+            <button onClick={exportCsv} className="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded" disabled={displayMoons.length === 0}>
+              Export CSV
+            </button>
+            <button onClick={exportJson} className="bg-green-700 hover:bg-green-600 px-4 py-2 rounded" disabled={moons.length === 0}>
+              Export JSON
+            </button>
+            <button onClick={() => setShowJsonImport(true)} className="bg-green-800 hover:bg-green-700 px-4 py-2 rounded">
+              Import JSON
+            </button>
+            <button onClick={copyMarkdown} className="bg-purple-700 hover:bg-purple-600 px-4 py-2 rounded" disabled={displayMoons.length === 0}>
+              Copy Markdown
+            </button>
+            <button onClick={handleClearAll} className="bg-red-800 hover:bg-red-700 px-4 py-2 rounded ml-auto">
+              Clear All
+            </button>
+          </div>
+          {priceError && <div className="mt-2 text-red-400 text-sm">{priceError}</div>}
+          {lastPriceUpdate && <div className="mt-1 text-gray-500 text-sm">Prices last updated: {new Date(lastPriceUpdate).toLocaleString()}</div>}
+        </div>
+
+        {showPriceImport && (
+          <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-blue-500">
+            <h2 className="text-lg font-semibold mb-2">Paste Janice Price Data</h2>
+            <p className="text-gray-400 text-sm mb-2">Copy the results from Janice (use their "Copy" button) and paste here:</p>
+            <textarea
+              className="w-full h-48 bg-gray-700 text-gray-100 rounded p-2 font-mono text-sm mb-2"
+              placeholder="Paste Janice output here..."
+              value={priceImportText}
+              onChange={(e) => setPriceImportText(e.target.value)}
+            />
+            <div className="flex gap-2">
+              <button onClick={() => parseJanicePaste(priceImportText)} className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-semibold">
+                Import Prices
+              </button>
+              <button onClick={() => { setShowPriceImport(false); setPriceImportText(''); }} className="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showJsonImport && (
+          <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-green-500">
+            <h2 className="text-lg font-semibold mb-2">Import Moon Data (JSON)</h2>
+            <p className="text-gray-400 text-sm mb-2">Paste exported JSON data from another user:</p>
+            <textarea
+              className="w-full h-48 bg-gray-700 text-gray-100 rounded p-2 font-mono text-sm mb-2"
+              placeholder='{"version": 1, "moons": [...], "prices": {...}}'
+              value={jsonImportText}
+              onChange={(e) => setJsonImportText(e.target.value)}
+            />
+            <div className="flex gap-2">
+              <button onClick={importJson} className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded font-semibold">
+                Import Data
+              </button>
+              <button onClick={() => { setShowJsonImport(false); setJsonImportText(''); }} className="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {showPrices && (
+          <div className="bg-gray-800 rounded-lg p-4 mb-6">
+            <h2 className="text-lg font-semibold mb-2">Material Prices (Jita Buy)</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {Object.entries(prices).map(([material, price]) => (
+                <div key={material} className="flex items-center gap-2">
+                  <label className="text-sm text-gray-400 w-32 truncate" title={material}>{material}:</label>
+                  <input
+                    type="number"
+                    value={price}
+                    onChange={(e) => handlePriceChange(material, e.target.value)}
+                    className="w-24 bg-gray-700 rounded px-2 py-1 text-right"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {moons.length > 0 && (
+          <div className="flex gap-4 mb-4 flex-wrap items-center">
+            <div>
+              <label className="text-sm text-gray-400 mr-2">System:</label>
+              <select value={filterSystem} onChange={(e) => setFilterSystem(e.target.value)} className="bg-gray-700 rounded px-2 py-1">
+                <option value="">All Systems</option>
+                {systems.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm text-gray-400 mr-2">Min Rarity:</label>
+              <select value={filterRarity} onChange={(e) => setFilterRarity(e.target.value)} className="bg-gray-700 rounded px-2 py-1">
+                <option value="">Any</option>
+                <option value="R8">R8+</option>
+                <option value="R16">R16+</option>
+                <option value="R32">R32+</option>
+                <option value="R64">R64</option>
+              </select>
+            </div>
+            <div className="text-gray-400 ml-auto">
+              {displayMoons.length} moons ({moons.length} total)
+            </div>
+          </div>
+        )}
+        
+        {displayMoons.length > 0 ? (
+          <div className="bg-gray-800 rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-700">
+                <tr>
+                  <th className="px-3 py-2 text-left cursor-pointer hover:bg-gray-600" onClick={() => handleSort('name')}>
+                    Moon <SortIcon field="name" />
+                  </th>
+                  <th className="px-3 py-2 text-left cursor-pointer hover:bg-gray-600" onClick={() => handleSort('system')}>
+                    System <SortIcon field="system" />
+                  </th>
+                  <th className="px-3 py-2 text-right cursor-pointer hover:bg-gray-600" onClick={() => handleSort('totalIsk')}>
+                    ISK/Month <SortIcon field="totalIsk" />
+                  </th>
+                  <th className="px-3 py-2 text-left cursor-pointer hover:bg-gray-600" onClick={() => handleSort('bestOre')}>
+                    Best Ore <SortIcon field="bestOre" />
+                  </th>
+                  <th className="px-3 py-2 text-center cursor-pointer hover:bg-gray-600" onClick={() => handleSort('bestRarity')}>
+                    Rarity <SortIcon field="bestRarity" />
+                  </th>
+                  <th className="px-3 py-2 text-center">Ores</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayMoons.map((moon, i) => (
+                  <tr 
+                    key={moon.name} 
+                    className={`border-t border-gray-700 hover:bg-gray-750 cursor-pointer ${i % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'}`}
+                    onClick={() => setSelectedMoon(selectedMoon?.name === moon.name ? null : moon)}
+                  >
+                    <td className="px-3 py-2">{moon.name}</td>
+                    <td className="px-3 py-2 text-gray-400">{moon.system}</td>
+                    <td className="px-3 py-2 text-right font-mono text-green-400">{formatIsk(moon.totalIsk)}</td>
+                    <td className="px-3 py-2">{moon.bestOre}</td>
+                    <td className="px-3 py-2 text-center">
+                      <span className={`px-2 py-0.5 rounded text-sm ${
+                        moon.bestRarity === 'R64' ? 'bg-purple-900 text-purple-200' :
+                        moon.bestRarity === 'R32' ? 'bg-yellow-900 text-yellow-200' :
+                        moon.bestRarity === 'R16' ? 'bg-blue-900 text-blue-200' :
+                        moon.bestRarity === 'R8' ? 'bg-green-900 text-green-200' :
+                        'bg-gray-700 text-gray-300'
+                      }`}>
+                        {moon.bestRarity}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-center text-gray-400">{moon.ores.length}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="bg-gray-800 rounded-lg p-8 text-center text-gray-400">
+            <p>No moon data yet. Paste your probe scan results above to get started.</p>
+          </div>
+        )}
+        
+        {selectedMoon && (
+          <div className="bg-gray-800 rounded-lg p-4 mt-4">
+            <h3 className="text-lg font-semibold mb-2">{selectedMoon.name}</h3>
+            <table className="w-full">
+              <thead className="text-gray-400 text-sm">
+                <tr>
+                  <th className="text-left py-1">Ore</th>
+                  <th className="text-right py-1">%</th>
+                  <th className="text-center py-1">Rarity</th>
+                  <th className="text-left py-1">Material</th>
+                  <th className="text-right py-1">Units/Mo</th>
+                  <th className="text-right py-1">ISK/Mo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedMoon.oreValues.map(ore => (
+                  <tr key={ore.name} className="border-t border-gray-700">
+                    <td className="py-1">{ore.name}</td>
+                    <td className="py-1 text-right text-gray-400">{(ore.quantity * 100).toFixed(1)}%</td>
+                    <td className="py-1 text-center">
+                      <span className={`px-1.5 py-0.5 rounded text-xs ${
+                        ore.rarity === 'R64' ? 'bg-purple-900 text-purple-200' :
+                        ore.rarity === 'R32' ? 'bg-yellow-900 text-yellow-200' :
+                        ore.rarity === 'R16' ? 'bg-blue-900 text-blue-200' :
+                        ore.rarity === 'R8' ? 'bg-green-900 text-green-200' :
+                        'bg-gray-700 text-gray-300'
+                      }`}>{ore.rarity}</span>
+                    </td>
+                    <td className="py-1 text-gray-400">{ore.material}</td>
+                    <td className="py-1 text-right font-mono">{ore.units.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                    <td className="py-1 text-right font-mono text-green-400">{formatIsk(ore.isk)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="border-t-2 border-gray-600 font-semibold">
+                <tr>
+                  <td colSpan={5} className="py-2">Total</td>
+                  <td className="py-2 text-right font-mono text-green-400">{formatIsk(selectedMoon.totalIsk)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+        
+        <div className="text-center text-gray-500 text-sm mt-8">
+          <p>Metenox efficiency: {METENOX_EFFICIENCY * 100}% | Monthly m³: {METENOX_MONTHLY_M3.toLocaleString()}</p>
+          <p>Data persists in browser localStorage. Prices from Jita buy orders.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<MetenoxCalculator />);
+  </script>
+</body>
+</html>

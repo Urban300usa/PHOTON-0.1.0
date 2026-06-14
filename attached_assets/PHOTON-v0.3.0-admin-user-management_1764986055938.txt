@@ -1,0 +1,188 @@
+PHOTON Admin User Management System - Implementation Guide
+=========================================================
+
+VERSION UPDATE: Update PHOTON version from v0.2.0-dev to v0.3.0-dev
+(This is a new feature addition = minor version bump)
+
+Version number rules for future reference:
+- Major (first digit): Breaking changes or major overhauls
+- Minor (second digit): New features
+- Patch (third digit): Bug fixes and small tweaks
+
+=========================================================
+
+Add a complete user management system to the admin panel where I can view all users, see who's currently active, click on any user to view their full details, manage their account, promote them to admin, suspend users, leave admin notes, and view a full audit log of all admin actions.
+
+
+PART 1: DATABASE
+----------------
+
+Create three new database tables:
+
+1. Admin Notes table - for admins to leave notes/comments on user profiles
+   - Store who wrote the note, who it's about, the note text, whether it's pinned, and timestamps
+
+2. User Suspensions table - for temporarily or permanently suspending users
+   - Store who was suspended, who suspended them, the reason, when it was suspended, when it expires (null for permanent), and if/when it was lifted and by whom
+
+3. Admin Audit Log table - tracks ALL admin actions for accountability
+   - Store which admin did what action, who was affected, additional details as JSON, IP address, and timestamp
+
+
+PART 2: BACKEND API
+-------------------
+
+Create these new endpoints:
+
+User Management:
+- Get all users with filters (search, active only, admins only, suspended only) and pagination
+- Get detailed profile for a specific user including their notes, suspensions, badges, sessions, everything
+
+Suspension System:
+- Suspend a user (with reason and optional duration)
+- Lift/unsuspend a user
+- Get suspension history for a user
+
+Admin Notes System:
+- Add a note to a user's profile
+- Edit a note (only your own notes or super admins can edit others)
+- Delete a note
+- Pin/unpin important notes
+- Get all notes for a user
+
+Audit Log:
+- Get audit log with filters (by admin, by target user, by action type, by date range)
+- Automatically log ALL existing admin actions (gift PRO, revoke PRO, extend PRO, grant badge, revoke badge, promote admin, demote admin, generate codes, etc.)
+
+Also add a suspension check that prevents suspended users from using the app and shows them why they're suspended.
+
+
+PART 3: ADMIN PANEL - USERS TAB
+-------------------------------
+
+Add a new "Users" tab to the admin panel with:
+
+Main View:
+- Stats bar at top showing: Total Users, Currently Active (green with pulsing dot), Suspended (red), Admins (orange)
+- Search box to find users by name
+- Filter buttons: All Users, Active Only, Admins Only, Suspended Only
+- Sort options: Name, Join Date, Last Active, Total ISK
+- User list showing each user with: online status indicator, name, character ID, role badges (Super Admin/Admin/PRO), suspended badge if applicable, member since, last active time, session count, total ISK earned, and a small icon if they have admin notes
+- Pagination controls
+- Auto-refresh active count every 30 seconds
+
+
+PART 4: ADMIN PANEL - USER DETAIL VIEW
+--------------------------------------
+
+When clicking on a user, show a detailed panel/modal with:
+
+Header:
+- Character portrait from EVE image server
+- Character name and ID (with copy button)
+- All their status badges (online/offline, role, PRO, suspended)
+- Member since and last active dates
+
+Suspension Alert Banner (if suspended):
+- Red warning banner showing they're suspended
+- The reason and when it expires
+- Quick "Lift Suspension" button
+
+Admin Notes Section:
+- List of all notes left by admins about this user
+- Each note shows the text, who wrote it, when, and edit/delete buttons
+- Pinned notes appear at top
+- Button to add new note
+- Expandable/collapsible section
+
+Admin & Permissions Section:
+- Their current role with colored badge
+- "Promote to Admin" button (only for super admins to use)
+- "Demote from Admin" button (only for super admins, can't demote other super admins)
+- Shows who promoted them and when if they're an admin
+
+Quick Actions:
+- Gift PRO (pre-fills their info)
+- Extend PRO (if they have it)
+- Revoke PRO (if they have it)
+- Grant Badge (pre-fills their info)
+- Suspend User / Lift Suspension
+
+Stats Grid:
+- Total Sessions
+- Total ISK Earned
+- Average ISK/Hour
+- Total Time Played
+- Their Corp Tax Rate setting
+
+Current Session (if online):
+- Session start time
+- Live duration counter
+- Current ISK earned
+- Ship and system they're in
+
+Badges Section:
+- All their special badges with grant dates
+- Buttons to grant new or revoke existing badges
+
+Recent Sessions:
+- Table of their last 10 sessions with date, duration, ISK earned, ISK/hour
+
+Unlocks:
+- Themes they've unlocked
+- Bonus tiles they've unlocked
+
+Subscription History:
+- PRO subscription details - when started, when expires, how they got it
+
+User's Audit History:
+- Recent admin actions that affected this user
+
+
+PART 5: ADMIN PANEL - AUDIT LOG TAB
+-----------------------------------
+
+Add a new "Audit Log" tab showing all admin actions:
+
+- Filterable by: which admin, which target user, action type, date range
+- Searchable
+- Shows each entry with: timestamp, admin name, action taken (color coded), target user, details summary
+- Action types should be color coded (green for grants/gifts, red for revokes/suspensions, orange for admin changes, etc.)
+- Expandable rows to see full JSON details
+- Export to CSV option
+- Pagination
+
+
+PART 6: SUSPENSION FLOW
+-----------------------
+
+When a user is suspended:
+- They should see a message when they try to use the app explaining they're suspended
+- Show them the reason and when it expires (if temporary)
+- They should still be able to log in to see this message, just not use features
+- Suspended users should appear with red indicators throughout the admin panel
+
+
+PART 7: STYLING
+---------------
+
+Match existing admin panel dark gaming aesthetic:
+- Active users: green accents
+- PRO users: gold/yellow accents
+- Admins: orange accents
+- Super Admins: red/crimson accents
+- Suspended users: red warning colors
+- Use Shield icon for admin indicators
+- Use appropriate icons throughout (Ban icon for suspensions, MessageSquare for notes, History for audit log)
+
+
+PART 8: SAFETY & PERMISSIONS
+----------------------------
+
+- Only super admins can promote/demote admins
+- Only super admins can suspend/unsuspend users
+- Admins cannot demote themselves
+- Cannot suspend super admins
+- All actions require confirmation dialogs
+- All actions are logged to audit log with full details
+- Show clear warning messages before destructive actions
