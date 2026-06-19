@@ -28,8 +28,10 @@ WORKDIR /app
 # Copy package files first (better layer caching)
 COPY package*.json ./
 
-# Install all dependencies (including devDependencies for build)
-RUN npm ci
+# Install all dependencies (including devDependencies for build).
+# Use `npm install` (not `npm ci`) so the build tolerates minor lockfile drift
+# e.g. optional native deps of `ws` like bufferutil/utf-8-validate.
+RUN npm install --no-audit --no-fund
 
 # Copy source code
 COPY . .
