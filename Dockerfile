@@ -36,8 +36,9 @@ RUN npm install --no-audit --no-fund
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build the application. Raise Node's heap so the Vite build doesn't OOM on small
+# droplets — this relies on swap being enabled on the host (see DEPLOY.md step 3).
+RUN NODE_OPTIONS=--max-old-space-size=2048 npm run build
 
 # NOTE: we intentionally KEEP dev dependencies so `npm run db:push` (drizzle-kit)
 # is available inside the container for first-time schema setup / migrations.
