@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -110,12 +111,7 @@ export default function MarketPage() {
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ShoppingCart className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">Market Orders</h1>
-          </div>
-        </div>
+        <PageHeader icon={ShoppingCart} title="Market Orders" subtitle="Track your buy and sell orders" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
@@ -129,34 +125,29 @@ export default function MarketPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <ShoppingCart className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">Market Orders</h1>
-            <p className="text-sm text-muted-foreground">
-              Track your buy and sell orders
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {viewMode === "all" && (
-            <Badge variant="secondary">
-              <Users className="h-3 w-3 mr-1" />
-              All Characters
-            </Badge>
-          )}
-          <Button
-            variant="outline"
-            onClick={() => syncMutation.mutate()}
-            disabled={syncMutation.isPending}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? "animate-spin" : ""}`} />
-            Sync from ESI
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        icon={ShoppingCart}
+        title="Market Orders"
+        subtitle="Track your buy and sell orders"
+        actions={
+          <>
+            {viewMode === "all" && (
+              <Badge variant="secondary">
+                <Users className="h-3 w-3 mr-1" />
+                All Characters
+              </Badge>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => syncMutation.mutate()}
+              disabled={syncMutation.isPending}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? "animate-spin" : ""}`} />
+              Sync from ESI
+            </Button>
+          </>
+        }
+      />
 
       {ordersError && (
         <Card className="border-destructive">

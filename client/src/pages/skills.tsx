@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -890,12 +891,7 @@ export default function SkillsPage() {
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <GraduationCap className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">Skills</h1>
-          </div>
-        </div>
+        <PageHeader icon={GraduationCap} title="Skills" subtitle="Track training and plan your skill goals" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Skeleton className="h-32" />
           <Skeleton className="h-32" />
@@ -908,34 +904,29 @@ export default function SkillsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <GraduationCap className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">Skills</h1>
-            <p className="text-sm text-muted-foreground">
-              Track training and plan your skill goals
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {viewMode === "all" && (
-            <Badge variant="secondary">
-              <Users className="h-3 w-3 mr-1" />
-              All Characters
-            </Badge>
-          )}
-          <Button
-            variant="outline"
-            onClick={() => syncMutation.mutate()}
-            disabled={syncMutation.isPending}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? "animate-spin" : ""}`} />
-            Sync Queue
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        icon={GraduationCap}
+        title="Skills"
+        subtitle="Track training and plan your skill goals"
+        actions={
+          <>
+            {viewMode === "all" && (
+              <Badge variant="secondary">
+                <Users className="h-3 w-3 mr-1" />
+                All Characters
+              </Badge>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => syncMutation.mutate()}
+              disabled={syncMutation.isPending}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? "animate-spin" : ""}`} />
+              Sync Queue
+            </Button>
+          </>
+        }
+      />
 
       {statusError && (
         <Card className="border-destructive">

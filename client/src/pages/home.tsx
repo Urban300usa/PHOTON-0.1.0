@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { useQuery } from "@tanstack/react-query";
 import StatCard from "@/components/StatCard";
 import SessionControls from "@/components/SessionControls";
@@ -56,7 +57,7 @@ function formatISK(value: number): string {
   return value.toLocaleString();
 }
 
-const FALLBACK_VERSION = "0.3.0-dev";
+const FALLBACK_VERSION = "0.4.0";
 
 export default function Home() {
   const { toast } = useToast();
@@ -696,20 +697,7 @@ export default function Home() {
     <TutorialProvider>
       <div className="min-h-screen bg-background p-4 md:p-6 lg:p-8 relative">
         <div className="max-w-7xl mx-auto">
-          {/* Ratting Tracker Header */}
-          <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Crosshair className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">Ratting Tracker</h1>
-                <p className="text-sm text-muted-foreground">
-                  Track your EVE Online ratting income
-                </p>
-              </div>
-            </div>
-          </div>
+          <PageHeader icon={Crosshair} title="Ratting Tracker" subtitle="Track your EVE Online ratting income" />
 
           <DashboardGrid 
             tiles={dashboardTiles}

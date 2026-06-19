@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -2291,30 +2292,23 @@ function AdminPageContent() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b bg-card/50">
-        <div className="flex items-center justify-between gap-4 p-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => setLocation("/")} data-testid="button-back-dashboard">
-              <ArrowLeft className="w-5 h-5" />
+      <div className="border-b bg-card/50 p-4">
+        <PageHeader
+          icon={Shield}
+          title="Admin Control Panel"
+          subtitle="Manage PRO subscriptions, view statistics, and control system settings"
+          actions={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => adminTutorial.restart()}
+              data-testid="button-admin-tutorial"
+            >
+              <GraduationCap className="w-4 h-4 mr-2" />
+              Admin Guide
             </Button>
-            <div className="flex items-center gap-2">
-              <Shield className="w-6 h-6 text-primary" />
-              <div>
-                <h1 className="text-xl font-bold">Admin Control Panel</h1>
-                <p className="text-sm text-muted-foreground">Manage PRO subscriptions, view statistics, and control system settings</p>
-              </div>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => adminTutorial.restart()}
-            data-testid="button-admin-tutorial"
-          >
-            <GraduationCap className="w-4 h-4 mr-2" />
-            Admin Guide
-          </Button>
-        </div>
+          }
+        />
       </div>
 
       <div className="flex-1 overflow-hidden p-4">

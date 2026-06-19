@@ -1,9 +1,9 @@
 {
   "name": "photon",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "type": "module",
   "license": "MIT",
-  "main": "dist-electron/main.js",
+  "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
     "build": "tsx script/build.ts",
@@ -14,7 +14,7 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "db:migrate:0008": "tsx scripts/run-migration-0008.ts",
-    "electron:build-main": "esbuild electron/main.ts electron/preload.ts --bundle --platform=node --target=node20 --external:electron --outdir=dist-electron --format=esm",
+    "electron:build-main": "esbuild electron/main.ts --bundle --platform=node --target=node20 --external:electron --outfile=dist-electron/main.cjs --format=cjs && esbuild electron/preload.ts --bundle --platform=node --target=node20 --external:electron --outfile=dist-electron/preload.js --format=cjs",
     "electron:dev": "npm run build && npm run electron:build-main && cross-env NODE_ENV=production electron .",
     "electron:pack": "npm run build && npm run electron:build-main && electron-builder --dir",
     "electron:dist": "npm run build && npm run electron:build-main && electron-builder",

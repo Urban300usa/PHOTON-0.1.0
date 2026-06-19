@@ -8,9 +8,11 @@ interface ThemeContextType {
   mode: ThemeMode;
   theme: FactionTheme;
   backgroundEffect: BackgroundEffect;
+  reduceMotion: boolean;
   setMode: (mode: ThemeMode) => void;
   setTheme: (theme: FactionTheme) => void;
   setBackgroundEffect: (effect: BackgroundEffect) => void;
+  setReduceMotion: (v: boolean) => void;
   toggleMode: () => void;
 }
 
@@ -22,6 +24,7 @@ interface StoredTheme {
   mode: ThemeMode;
   theme: FactionTheme;
   backgroundEffect?: BackgroundEffect;
+  reduceMotion?: boolean;
 }
 
 const BACKGROUND_EFFECTS: BackgroundEffect[] = ["none", "starfield", "nebula", "space"];
@@ -42,12 +45,13 @@ function getStoredTheme(): StoredTheme {
         mode: parsed.mode === "light" ? "light" : "dark",
         theme: isValidTheme ? theme : "default",
         backgroundEffect: bgEffect,
+        reduceMotion: !!parsed.reduceMotion,
       };
     }
   } catch (e) {
     console.error("Failed to parse stored theme:", e);
   }
-  return { mode: "dark", theme: "default", backgroundEffect: "none" };
+  return { mode: "dark", theme: "default", backgroundEffect: "none", reduceMotion: false };
 }
 
 function storeTheme(theme: StoredTheme): void {
@@ -64,6 +68,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(() => getStoredTheme().mode);
   const [theme, setThemeState] = useState<FactionTheme>(() => getStoredTheme().theme);
   const [backgroundEffect, setBackgroundEffectState] = useState<BackgroundEffect>(() => getStoredTheme().backgroundEffect || "none");
+  const [reduceMotion, setReduceMotionState] = useState<boolean>(() => !!getStoredTheme().reduceMotion);
 
   const applyTheme = useCallback((currentMode: ThemeMode, currentTheme: FactionTheme, currentBgEffect: BackgroundEffect) => {
     const root = document.documentElement;
@@ -78,8 +83,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     applyTheme(mode, theme, backgroundEffect);
-    storeTheme({ mode, theme, backgroundEffect });
-  }, [mode, theme, backgroundEffect, applyTheme]);
+    document.documentElement.classList.toggle("reduce-motion", reduceMotion);
+    storeTheme({ mode, theme, backgroundEffect, reduceMotion });
+  }, [mode, theme, backgroundEffect, reduceMotion, applyTheme]);
 
   const setMode = useCallback((newMode: ThemeMode) => {
     setModeState(newMode);
@@ -93,12 +99,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setBackgroundEffectState(newEffect);
   }, []);
 
+  const setReduceMotion = useCallback((v: boolean) => {
+    setReduceMotionState(v);
+  }, []);
+
   const toggleMode = useCallback(() => {
     setModeState((prev) => (prev === "light" ? "dark" : "light"));
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ mode, theme, backgroundEffect, setMode, setTheme, setBackgroundEffect, toggleMode }}>
+    <ThemeContext.Provider value={{ mode, theme, backgroundEffect, reduceMotion, setMode, setTheme, setBackgroundEffect, setReduceMotion, toggleMode }}>
       {children}
     </ThemeContext.Provider>
   );

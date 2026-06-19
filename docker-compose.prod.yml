@@ -1,0 +1,68 @@
+# ============================================================================
+# PHOTON — production stack for a single DigitalOcean droplet.
+# Self-contained: Postgres + app + Caddy (automatic HTTPS, WebSocket-ready).
+#
+#   1) cp .env.example .env   and fill it in
+#   2) docker compose -f docker-compose.prod.yml up -d --build
+#
+# Caddy provisions a Let's Encrypt cert for $DOMAIN automatically (ports 80/443).
+# Nothing but Caddy is exposed to the internet; app + db stay on the internal net.
+# ============================================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: photon-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: photon
+      POSTGRES_USER: photon
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - photon_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U photon -d photon"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [photon-net]
+
+  app:
+    build: .
+    container_name: photon-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: "5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "5000"          # internal only — reached via Caddy, not published to host
+    networks: [photon-net]
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: photon-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [app]
+    networks: [photon-net]
+
+volumes:
+  photon_pgdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  photon-net:
+    driver: bridge

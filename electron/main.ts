@@ -1,13 +1,19 @@
-import { app, BrowserWindow, shell, dialog } from "electron";
+import { app, BrowserWindow, shell, dialog, Menu } from "electron";
 import { spawn, ChildProcess, execSync } from "child_process";
 import { autoUpdater } from "electron-updater";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PORT = 5000;
+
+// Thin-client mode: point the desktop app at a hosted PHOTON server instead of
+// running one locally. For the hosted desktop build, set DEFAULT_REMOTE_URL
+// (e.g. "https://photon.yourdomain.com") or launch with PHOTON_REMOTE_URL set.
+// Leave empty for the classic self-contained build (spawns a local server).
+const DEFAULT_REMOTE_URL = "";
+const REMOTE_URL = process.env.PHOTON_REMOTE_URL || DEFAULT_REMOTE_URL;
+const THIN_CLIENT = REMOTE_URL.length > 0;
+
 const LOG_FILE = path.join(app.getPath("temp"), "photon-server.log");
 let serverProcess: ChildProcess | null = null;
 let mainWindow: BrowserWindow | null = null;
@@ -94,6 +100,9 @@ function startServer(): Promise<void> {
 }
 
 function createWindow() {
+  // Remove the default application menu bar (File / Edit / View / Window)
+  Menu.setApplicationMenu(null);
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -101,6 +110,7 @@ function createWindow() {
     minHeight: 600,
     title: "PHOTON",
     backgroundColor: "#09090b",
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -108,7 +118,7 @@ function createWindow() {
     },
   });
 
-  mainWindow.loadURL(`http://localhost:${PORT}`);
+  mainWindow.loadURL(THIN_CLIENT ? REMOTE_URL : `http://localhost:${PORT}`);
 
   // Open external links in the system browser, not inside the app
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -153,10 +163,14 @@ function setupAutoUpdater() {
 }
 
 app.whenReady().then(async () => {
-  try {
-    await startServer();
-  } catch (err) {
-    console.error("Failed to start server:", err);
+  if (THIN_CLIENT) {
+    console.log(`Thin-client mode — loading hosted server: ${REMOTE_URL}`);
+  } else {
+    try {
+      await startServer();
+    } catch (err) {
+      console.error("Failed to start server:", err);
+    }
   }
   createWindow();
 

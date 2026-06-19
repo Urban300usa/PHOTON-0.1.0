@@ -37,8 +37,10 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Prune devDependencies after build
-RUN npm prune --production
+# NOTE: we intentionally KEEP dev dependencies so `npm run db:push` (drizzle-kit)
+# is available inside the container for first-time schema setup / migrations.
+# (For a leaner image later, switch to committed drizzle migrations + drizzle-orm's
+# runtime migrator, then re-enable: RUN npm prune --production)
 
 # Expose the app port
 EXPOSE 5000

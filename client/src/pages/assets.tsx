@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -144,6 +145,22 @@ export default function Assets() {
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+
+  // Record a daily net-worth snapshot whenever Assets loads (single-character view only,
+  // so the value reflects this character). The endpoint upserts by date, so calling it
+  // once per visit is idempotent. This is what populates the Net Worth History chart.
+  const snapshotSentRef = useRef(false);
+  useEffect(() => {
+    const total = assetsData?.totalNetWorth;
+    if (snapshotSentRef.current || viewMode === 'all' || typeof total !== 'number' || total <= 0) return;
+    snapshotSentRef.current = true;
+    fetch('/api/analytics/net-worth/snapshot', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ totalValue: total }),
+    }).catch(() => { /* non-critical */ });
+  }, [assetsData?.totalNetWorth, viewMode]);
 
   const filteredAssets = useMemo(() => {
     if (!assetsData?.assets) return [];
@@ -543,18 +560,11 @@ export default function Assets() {
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Package className="h-6 w-6" />
-              Assets
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              {viewMode === 'all' ? 'All characters' : character?.name || 'Your character'}'s assets and locations
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2">
+        <PageHeader
+          icon={Package}
+          title="Assets"
+          subtitle={`${viewMode === 'all' ? 'All characters' : character?.name || 'Your character'}'s assets and locations`}
+          actions={
             <Button
               variant="outline"
               size="sm"
@@ -565,8 +575,8 @@ export default function Assets() {
               <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
-          </div>
-        </div>
+          }
+        />
 
         {error && (
           <Card className="border-destructive">

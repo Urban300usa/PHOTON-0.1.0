@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -717,18 +718,11 @@ export default function Contracts() {
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <FileText className="h-6 w-6" />
-              Contracts
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              {viewMode === 'all' ? 'All characters' : character?.name || 'Your character'}'s contracts
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2">
+        <PageHeader
+          icon={FileText}
+          title="Contracts"
+          subtitle={`${viewMode === 'all' ? 'All characters' : character?.name || 'Your character'}'s contracts`}
+          actions={
             <Button
               variant="outline"
               size="sm"
@@ -739,8 +733,8 @@ export default function Contracts() {
               <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
-          </div>
-        </div>
+          }
+        />
 
         {error && (
           <Card className="border-destructive">

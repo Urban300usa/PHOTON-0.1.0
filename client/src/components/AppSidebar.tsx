@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -32,6 +33,16 @@ import {
   Navigation2,
   BarChart3,
   TrendingUp,
+  Anchor,
+  CreditCard,
+  Bell,
+  LineChart,
+  Clock,
+  FileStack,
+  Receipt,
+  ChevronDown,
+  LayoutDashboard,
+  MessageSquare,
 } from "lucide-react";
 import photonLogo from "@assets/lucid-origin_Futuristic_app_icon_glowing_energy_sphere_electri_1764963358793.jpg";
 import {
@@ -47,7 +58,13 @@ import {
   SidebarHeader,
   SidebarSeparator,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -61,6 +78,7 @@ import { BADGE_RARITY_COLORS, type BadgeRarity } from "@shared/schema";
 import { CharacterSwitcher } from "@/components/CharacterSwitcher";
 import { useWhatsNew } from "@/contexts/WhatsNewContext";
 import { useHasUnseenChangelog } from "@/components/WhatsNewDialog";
+import { useChat } from "@/contexts/ChatContext";
 
 interface BadgeInfo {
   type: string;
@@ -130,6 +148,8 @@ function MiniCharacterBadge({ badge }: { badge: BadgeInfo }) {
 
 export function AppSidebar() {
   const [location] = useLocation();
+  const { state: sidebarState } = useSidebar();
+  const { unread: chatUnread } = useChat();
   const { character, isAdmin, isAuthenticated, logout } = useAuth();
   const { isPro } = useProContext();
   const { toast } = useToast();
@@ -154,99 +174,96 @@ export function AppSidebar() {
 
   const unreadCount = notificationData?.count || 0;
 
-  const navItems = [
+  const navGroups = [
     {
-      title: "Ratting Tracker",
-      url: "/",
-      icon: Crosshair,
-      isActive: location === "/",
-      badge: 0,
+      label: "Dashboard",
+      items: [
+        { title: "Overview", url: "/", icon: LayoutDashboard, badge: 0 },
+        { title: "Ratting Tracker", url: "/ratting", icon: Crosshair, badge: 0 },
+        { title: "Timer Dashboard", url: "/timers", icon: Clock, badge: 0 },
+        { title: "Analytics", url: "/analytics", icon: BarChart3, badge: 0 },
+        { title: "Net Worth", url: "/analytics/net-worth", icon: LineChart, badge: 0 },
+        { title: "Leaderboards", url: "/leaderboards", icon: Trophy, badge: 0 },
+      ],
     },
     {
-      title: "Mining Tracker",
-      url: "/mining",
-      icon: Pickaxe,
-      isActive: location === "/mining",
-      badge: 0,
+      label: "Industry",
+      items: [
+        { title: "Mining Tracker", url: "/mining", icon: Pickaxe, badge: 0 },
+        { title: "Industry Jobs", url: "/industry", icon: Factory, badge: 0 },
+        { title: "Blueprints", url: "/blueprints", icon: FileStack, badge: 0 },
+        { title: "Planetary", url: "/planetary", icon: Globe2, badge: 0 },
+      ],
     },
     {
-      title: "Industry Jobs",
-      url: "/industry",
-      icon: Factory,
-      isActive: location === "/industry",
-      badge: 0,
+      label: "Assets & Wallet",
+      items: [
+        { title: "Assets", url: "/assets", icon: Package, badge: 0 },
+        { title: "Contracts", url: "/contracts", icon: FileText, badge: 0 },
+        { title: "Wallet Transactions", url: "/wallet/transactions", icon: Receipt, badge: 0 },
+      ],
     },
     {
-      title: "Planetary",
-      url: "/planetary",
-      icon: Globe2,
-      isActive: location === "/planetary",
-      badge: 0,
+      label: "Market",
+      items: [
+        { title: "Market", url: "/market", icon: ShoppingCart, badge: 0 },
+        { title: "Market Orders", url: "/market-orders", icon: CreditCard, badge: 0 },
+        { title: "Market Intel", url: "/market-intel", icon: TrendingUp, badge: 0 },
+      ],
     },
     {
-      title: "Assets",
-      url: "/assets",
-      icon: Package,
-      isActive: location === "/assets",
-      badge: 0,
+      label: "Travel",
+      items: [
+        { title: "Jump Planner", url: "/jump-planner", icon: Navigation2, badge: 0 },
+        { title: "Jump Clones", url: "/jump-clones", icon: Anchor, badge: 0 },
+      ],
     },
     {
-      title: "Contracts",
-      url: "/contracts",
-      icon: FileText,
-      isActive: location === "/contracts",
-      badge: 0,
+      label: "Character",
+      items: [
+        { title: "Skills", url: "/skills", icon: GraduationCap, badge: 0 },
+        { title: "Standings", url: "/standings", icon: Award, badge: 0 },
+        { title: "Loyalty Points", url: "/loyalty-points", icon: Star, badge: 0 },
+      ],
     },
     {
-      title: "Skills",
-      url: "/skills",
-      icon: GraduationCap,
-      isActive: location === "/skills",
-      badge: 0,
+      label: "Combat & Comms",
+      items: [
+        { title: "Killboard", url: "/killboard", icon: Crosshair, badge: 0 },
+        { title: "Chat", url: "/chat", icon: MessageSquare, badge: chatUnread },
+        { title: "Notifications", url: "/notifications", icon: Bell, badge: 0 },
+      ],
     },
     {
-      title: "Market",
-      url: "/market",
-      icon: ShoppingCart,
-      isActive: location === "/market",
-      badge: 0,
+      label: "More",
+      items: [
+        { title: "Support", url: "/support", icon: HelpCircle, badge: unreadCount },
+        ...(isAdmin ? [{ title: "Admin", url: "/admin", icon: Shield, badge: 0 }] : []),
+      ],
     },
-    {
-      title: "Market Intel",
-      url: "/market-intel",
-      icon: TrendingUp,
-      isActive: location === "/market-intel",
-      badge: 0,
-    },
-    {
-      title: "Jump Planner",
-      url: "/jump-planner",
-      icon: Navigation2,
-      isActive: location === "/jump-planner",
-      badge: 0,
-    },
-    {
-      title: "Analytics",
-      url: "/analytics",
-      icon: BarChart3,
-      isActive: location === "/analytics",
-      badge: 0,
-    },
-    {
-      title: "Support",
-      url: "/support",
-      icon: HelpCircle,
-      isActive: location === "/support",
-      badge: unreadCount,
-    },
-    ...(isAdmin ? [{
-      title: "Admin",
-      url: "/admin",
-      icon: Shield,
-      isActive: location === "/admin",
-      badge: 0,
-    }] : []),
   ];
+
+  // Persist which groups the user has collapsed across reloads
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem("photon-sidebar-groups");
+      if (saved) return JSON.parse(saved);
+    } catch { /* ignore */ }
+    return {};
+  });
+  const setGroupOpen = (label: string, open: boolean) => {
+    setOpenGroups((prev) => {
+      const next = { ...prev, [label]: open };
+      try { localStorage.setItem("photon-sidebar-groups", JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+  // A group is open if: sidebar is icon-collapsed (always show icons), OR it
+  // contains the active route, OR the user hasn't collapsed it (default open).
+  const isGroupOpen = (group: { label: string; items: { url: string }[] }) =>
+    sidebarState === "collapsed" ||
+    group.items.some((i) => i.url === location) ||
+    (openGroups[group.label] ?? true);
 
   const topBadges = (badgesData?.badges || []).slice(0, 3);
 
@@ -299,37 +316,53 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={item.isActive}
-                    tooltip={item.badge > 0 ? `${item.title} (${item.badge} new)` : item.title}
-                  >
-                    <Link href={item.url} data-testid={`nav-link-${item.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                      <div className="relative">
-                        <item.icon className="w-4 h-4" />
-                        {item.badge > 0 && (
-                          <span 
-                            className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold"
-                            data-testid={`badge-${item.title.toLowerCase().replace(/\s+/g, '-')}-count`}
-                          >
-                            {item.badge > 99 ? "99+" : item.badge}
-                          </span>
-                        )}
-                      </div>
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {navGroups.map((group) => (
+          <Collapsible
+            key={group.label}
+            open={isGroupOpen(group)}
+            onOpenChange={(o) => setGroupOpen(group.label, o)}
+            className="group/collapsible"
+          >
+            <SidebarGroup className="py-1">
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="w-full cursor-pointer hover:text-sidebar-foreground">
+                  {group.label}
+                  <ChevronDown className="ml-auto h-3.5 w-3.5 transition-transform group-data-[state=closed]/collapsible:-rotate-90" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={location === item.url}
+                          tooltip={item.badge > 0 ? `${item.title} (${item.badge} new)` : item.title}
+                        >
+                          <Link href={item.url} data-testid={`nav-link-${item.title.toLowerCase().replace(/\s+/g, '-')}`}>
+                            <div className="relative">
+                              <item.icon className="w-4 h-4" />
+                              {item.badge > 0 && (
+                                <span
+                                  className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold"
+                                  data-testid={`badge-${item.title.toLowerCase().replace(/\s+/g, '-')}-count`}
+                                >
+                                  {item.badge > 99 ? "99+" : item.badge}
+                                </span>
+                              )}
+                            </div>
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        ))}
 
         <SidebarGroup>
           <SidebarGroupLabel>Features</SidebarGroupLabel>

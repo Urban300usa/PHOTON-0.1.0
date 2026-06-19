@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage, generateActivationCode, generateGiftReferenceCode, generatePhotonCode, type SpecialBadgeData, type PhotonCodeData } from "./storage";
 import session from "express-session";
 import MemoryStore from "memorystore";
@@ -405,7 +406,12 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Trust proxy for secure cookies behind reverse proxy
   app.set('trust proxy', 1);
-  
+
+  // Health check (used by Docker/Caddy/load balancers; no auth, no session)
+  app.get("/api/health", (_req: Request, res: Response) => {
+    res.json({ status: "ok", uptime: process.uptime(), ts: new Date().toISOString() });
+  });
+
   // Create session store - use PostgreSQL for reliability (persists across restarts)
   // Electron serves over http://localhost even in production, so don't require HTTPS cookies
   const isProduction = process.env.NODE_ENV === "production" && !process.env.ELECTRON_RUN;
@@ -469,6 +475,29 @@ export async function registerRoutes(
     
     console.log("[DEV] Dev login available at /api/auth/dev-login");
   }
+
+  // Debug: show token scopes (decoded from JWT payload)
+  app.get("/api/auth/debug-scopes", async (req: Request, res: Response) => {
+    const token = await refreshTokenIfNeeded(req);
+    if (!token) { res.json({ error: "No token" }); return; }
+    try {
+      const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      // Test one structure lookup too
+      const testStructureId = 1051295814701; // first failing structure from logs
+      const esiRes = await fetch(
+        `${ESI_BASE_URL}/universe/structures/${testStructureId}/?datasource=tranquility`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const esiBody = await esiRes.text();
+      res.json({
+        scopes: payload.scp || payload.scope,
+        sub: payload.sub,
+        structureTest: { id: testStructureId, status: esiRes.status, body: esiBody.substring(0, 200) }
+      });
+    } catch (e: any) {
+      res.json({ error: e.message });
+    }
+  });
 
   // Get current auth status with corporation and alliance info (cached)
   app.get("/api/auth/status", async (req: Request, res: Response) => {
@@ -561,8 +590,15 @@ export async function registerRoutes(
       "esi-markets.read_character_orders.v1", // For market order tracking (v0.4.0)
       "esi-markets.structure_markets.v1", // For reading market orders at player-owned structures (Market Intel)
       "esi-search.search_structures.v1", // For searching player-owned structures by name (Market Intel)
+      "esi-clones.read_clones.v1", // Jump clones (v0.6.0)
+      "esi-clones.read_implants.v1", // Active implants for jump clones (v0.6.0)
+      "esi-killmails.read_killmails.v1", // Killboard (v0.6.0)
+      "esi-characters.read_notifications.v1", // Notifications (v0.6.0)
+      "esi-characters.read_standings.v1", // NPC standings (v0.6.0)
+      "esi-characters.read_loyalty.v1", // Loyalty points (v0.6.0)
+      "esi-characters.read_blueprints.v1", // Blueprint library (v0.7.0)
     ].join(" ");
-    
+
     const authUrl = new URL(ESI_AUTH_URL);
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("redirect_uri", redirectUri);
@@ -949,6 +985,13 @@ export async function registerRoutes(
       "esi-planets.manage_planets.v1",
       "esi-skills.read_skillqueue.v1",
       "esi-markets.read_character_orders.v1",
+      "esi-clones.read_clones.v1",
+      "esi-clones.read_implants.v1",
+      "esi-killmails.read_killmails.v1",
+      "esi-characters.read_notifications.v1",
+      "esi-characters.read_standings.v1",
+      "esi-characters.read_loyalty.v1",
+      "esi-characters.read_blueprints.v1",
     ].join(" ");
 
     const authUrl = new URL(ESI_AUTH_URL);
@@ -1018,6 +1061,13 @@ export async function registerRoutes(
       "esi-planets.manage_planets.v1",
       "esi-skills.read_skillqueue.v1",
       "esi-markets.read_character_orders.v1",
+      "esi-clones.read_clones.v1",
+      "esi-clones.read_implants.v1",
+      "esi-killmails.read_killmails.v1",
+      "esi-characters.read_notifications.v1",
+      "esi-characters.read_standings.v1",
+      "esi-characters.read_loyalty.v1",
+      "esi-characters.read_blueprints.v1",
     ].join(" ");
 
     const authUrl = new URL(ESI_AUTH_URL);
@@ -2782,6 +2832,25 @@ export async function registerRoutes(
         }
       }
 
+      // Fetch ESI market prices now — before structure name lookups consume the ESI error budget.
+      // /markets/prices/ is a public bulk endpoint (no auth, one request, all items).
+      const priceMap = new Map<number, number>();
+      try {
+        const priceResponse = await fetch(`${ESI_BASE_URL}/markets/prices/?datasource=tranquility`);
+        if (priceResponse.ok) {
+          const prices = await priceResponse.json() as { type_id: number; average_price?: number; adjusted_price?: number }[];
+          for (const p of prices) {
+            const price = p.adjusted_price || p.average_price || 0;
+            if (price > 0) priceMap.set(p.type_id, price);
+          }
+          console.log(`[Assets] Fetched ${prices.length} ESI market prices, mapped ${priceMap.size} non-zero prices`);
+        } else {
+          console.warn(`[Assets] Failed to fetch market prices: ${priceResponse.status}`);
+        }
+      } catch (err) {
+        console.warn('[Assets] Error fetching market prices:', err);
+      }
+
       // Fetch structure names (requires auth) - these are player-owned citadels
       // First check cache for any previously resolved structure names (per-character for privacy)
       const currentCharacterId = req.session.character!.characterId;
@@ -2820,19 +2889,35 @@ export async function registerRoutes(
             characterTokens.set(currentCharacterId, primaryToken);
           }
 
-          // Get linked character tokens if viewAll mode
-          if (viewAll) {
-            const linkedCharacters = await storage.getLinkedCharacters(currentCharacterId);
-            for (const linked of linkedCharacters) {
-              const token = await refreshLinkedCharacterToken(linked);
-              if (token) {
-                characterTokens.set(linked.characterId, token);
-              }
+          // Always collect linked character tokens for structure name resolution —
+          // a different character may have docking access even when not in viewAll mode
+          const linkedCharactersForNames = await storage.getLinkedCharacters(currentCharacterId);
+          for (const linked of linkedCharactersForNames) {
+            if (!linked.isActive) continue;
+            const token = await refreshLinkedCharacterToken(linked);
+            if (token) {
+              characterTokens.set(linked.characterId, token);
             }
           }
 
           console.log(`[Assets] Resolving ${uncachedStructureIds.length} structure names using ${characterTokens.size} character tokens...`);
+
+          // Log scopes on the primary token once so we can diagnose 403 issues
+          const primaryTokenForScope = characterTokens.get(currentCharacterId);
+          if (primaryTokenForScope) {
+            try {
+              const payload = JSON.parse(Buffer.from(primaryTokenForScope.split('.')[1], 'base64').toString());
+              const scopes: string[] = Array.isArray(payload.scp) ? payload.scp : (payload.scp || payload.scope || '').split(' ');
+              const hasStructureScope = scopes.some((s: string) => s.includes('read_structures'));
+              console.log(`[Assets] Token scopes include read_structures: ${hasStructureScope}. All scopes: ${scopes.join(', ')}`);
+              if (!hasStructureScope) {
+                console.log('[Assets] WARNING: esi-universe.read_structures.v1 scope missing - user must log out and re-authenticate');
+              }
+            } catch {}
+          }
+
           const newlyCached: { id: number; name: string; category: string }[] = [];
+          let loggedFirstForbidden = false;
 
           // Process in batches of 20 to avoid rate limiting
           for (let i = 0; i < uncachedStructureIds.length; i += 20) {
@@ -2870,19 +2955,25 @@ export async function registerRoutes(
                     const data = await response.json() as { name: string; solar_system_id?: number };
                     console.log(`[Assets] Structure ${structureId}: Resolved as "${data.name}"`);
                     return { id: structureId, name: data.name, shouldCache: true };
-                  } else if (response.status !== 403) {
-                    // Non-403 error, log and try next token
+                  } else if (response.status === 403) {
+                    if (!loggedFirstForbidden) {
+                      loggedFirstForbidden = true;
+                      const body = await response.text();
+                      console.log(`[Assets] Structure ${structureId}: 403 Forbidden - ESI says: ${body}`);
+                    }
+                    // 403 means this token doesn't have access, try next
+                  } else {
                     console.log(`[Assets] Structure ${structureId}: HTTP ${response.status}, trying next token`);
                   }
-                  // 403 means this token doesn't have access, try next
                 } catch (err) {
                   console.warn(`[Assets] Structure ${structureId} fetch error:`, err);
                 }
               }
 
-              // All tokens failed - mark as private structure
+              // All tokens failed — use ID-based fallback and cache so we skip next time
+              const idSuffix = String(structureId).slice(-6);
               console.log(`[Assets] Structure ${structureId}: No tokens have access (tried ${tokensToTry.length})`);
-              return { id: structureId, name: 'Private Structure', shouldCache: false };
+              return { id: structureId, name: `Unknown Structure (…${idSuffix})`, shouldCache: true };
             });
             const results = await Promise.all(structurePromises);
             results.forEach(r => {
@@ -3175,14 +3266,16 @@ export async function registerRoutes(
         // Only process top-level ships/containers that are in 'item' location
         // but whose parent isn't in our asset list (orphaned containers)
         if (asset.location_type === 'item' && !assetByItemId.has(asset.location_id)) {
-          // This item's parent isn't in our assets - might be another character's ship
-          // or the data is incomplete. Group it under "Unknown Location"
-          const locKey = 'unknown';
+          // Group by parent location_id — each missing container gets its own group.
+          // Also check if the location_id is actually a known station/structure (ESI data quirk).
+          const locKey = `orphan_${asset.location_id}`;
           if (!groupedByLocation[locKey]) {
+            const knownLocationName = locationNameMap.get(asset.location_id);
+            const idSuffix = String(asset.location_id).slice(-6);
             groupedByLocation[locKey] = {
-              locationId: 0,
-              locationName: 'Unknown Location',
-              locationType: 'other',
+              locationId: asset.location_id,
+              locationName: knownLocationName || `Unknown Container (…${idSuffix})`,
+              locationType: knownLocationName ? 'station' : 'other',
               items: [],
               totalItems: 0,
             };
@@ -3210,54 +3303,47 @@ export async function registerRoutes(
       const groupedAssets = Object.values(groupedByLocation);
       const totalFilteredAssets = groupedAssets.reduce((sum, loc) => sum + loc.items.length, 0);
 
-      // Fetch Jita prices for all items to calculate net worth
-      const allFilteredItems = groupedAssets.flatMap(loc => loc.items);
-      const uniqueTypeIds = Array.from(new Set(allFilteredItems.map(item => item.type_id)));
-      const priceMap = new Map<number, number>();
-      
-      // Fetch prices in batches (ESI allows up to 500 type IDs per market query)
-      const JITA_REGION_ID = 10000002;
-      const priceBatchSize = 100;
-      for (let i = 0; i < uniqueTypeIds.length; i += priceBatchSize) {
-        const batch = uniqueTypeIds.slice(i, i + priceBatchSize);
-        const pricePromises = batch.map(async (typeId) => {
-          try {
-            const response = await fetch(
-              `${ESI_BASE_URL}/markets/${JITA_REGION_ID}/orders/?datasource=tranquility&order_type=sell&type_id=${typeId}`
-            );
-            if (response.ok) {
-              const orders = await response.json() as { price: number; location_id: number }[];
-              // Get lowest sell order in Jita 4-4 (station ID 60003760)
-              const jitaOrders = orders.filter(o => o.location_id === 60003760);
-              if (jitaOrders.length > 0) {
-                const lowestPrice = Math.min(...jitaOrders.map(o => o.price));
-                return { typeId, price: lowestPrice };
-              }
-              // Fallback to any order in the region
-              if (orders.length > 0) {
-                const lowestPrice = Math.min(...orders.map(o => o.price));
-                return { typeId, price: lowestPrice };
-              }
-            }
-          } catch {}
-          return { typeId, price: 0 };
+      // priceMap already populated above (fetched before structure name lookups)
+
+      // Recursively price all items including those nested inside ships/containers
+      const priceItemTree = (items: AssetWithContents[]): { pricedItems: AssetWithContents[]; treeValue: number } => {
+        let treeValue = 0;
+        const pricedItems = items.map(item => {
+          const unitPrice = priceMap.get(item.type_id) || 0;
+          const totalValue = unitPrice * item.quantity;
+          treeValue += totalValue;
+          let pricedContents: AssetWithContents[] | undefined;
+          let contentsValue = 0;
+          if (item.contents) {
+            const result = priceItemTree(item.contents);
+            pricedContents = result.pricedItems;
+            contentsValue += result.treeValue;
+            treeValue += result.treeValue;
+          }
+          let pricedFitted: AssetWithContents[] | undefined;
+          if (item.fittedModules) {
+            const result = priceItemTree(item.fittedModules);
+            pricedFitted = result.pricedItems;
+            contentsValue += result.treeValue;
+            treeValue += result.treeValue;
+          }
+          return {
+            ...item,
+            unitPrice,
+            totalValue: totalValue + contentsValue,
+            contents: pricedContents,
+            fittedModules: pricedFitted,
+          };
         });
-        const results = await Promise.all(pricePromises);
-        results.forEach(r => priceMap.set(r.typeId, r.price));
-      }
+        return { pricedItems, treeValue };
+      };
 
       // Calculate net worth and add prices to items
       let totalNetWorth = 0;
       const assetsWithPrices = groupedAssets.map(location => {
-        let locationValue = 0;
-        const itemsWithPrices = location.items.map(item => {
-          const unitPrice = priceMap.get(item.type_id) || 0;
-          const totalValue = unitPrice * item.quantity;
-          locationValue += totalValue;
-          return { ...item, unitPrice, totalValue };
-        });
-        totalNetWorth += locationValue;
-        return { ...location, items: itemsWithPrices, locationValue };
+        const { pricedItems, treeValue } = priceItemTree(location.items);
+        totalNetWorth += treeValue;
+        return { ...location, items: pricedItems, locationValue: treeValue };
       });
 
       res.json({
@@ -8076,7 +8162,67 @@ export async function registerRoutes(
     }
   });
 
+  // Stop the ACTIVE session (no id needed) — used by the ratting overlay
+  app.post("/api/sessions/stop", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const active = await storage.getActiveSession(req.session.character.characterId);
+      if (!active) { res.status(404).json({ error: "No active session" }); return; }
+      const ended = await storage.endRattingSession(active.id, new Date(), {
+        totalIsk: active.totalIsk || 0,
+        bountyIsk: active.bountyIsk || 0,
+        lootIsk: active.lootIsk || 0,
+        killCount: active.killCount || 0,
+      });
+      res.json({ session: ended });
+    } catch (error) {
+      console.error("[Sessions] Failed to stop active session:", error);
+      res.status(500).json({ error: "Failed to stop session" });
+    }
+  });
+
+  // Add manual income to the ACTIVE session — used by the ratting overlay
+  app.post("/api/sessions/income", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const amount = Number(req.body?.amount) || 0;
+      if (amount <= 0) { res.status(400).json({ error: "Invalid amount" }); return; }
+      const active = await storage.getActiveSession(req.session.character.characterId);
+      if (!active) { res.status(404).json({ error: "No active session" }); return; }
+      const updated = await storage.updateRattingSession(active.id, {
+        totalIsk: (active.totalIsk || 0) + amount,
+        bountyIsk: (active.bountyIsk || 0) + amount,
+      });
+      res.json({ session: updated });
+    } catch (error) {
+      console.error("[Sessions] Failed to add income:", error);
+      res.status(500).json({ error: "Failed to add income" });
+    }
+  });
+
   // Delete a session (only completed ones)
+  // Clear all completed session history for the active character.
+  // MUST be registered before /api/sessions/:sessionId so "clear" isn't matched as an id.
+  app.delete("/api/sessions/clear", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const deleted = await storage.clearAllRattingSessions(req.session.character.characterId);
+      res.json({ success: true, deleted });
+    } catch (error) {
+      console.error("Clear sessions error:", error);
+      res.status(500).json({ error: "Failed to clear sessions" });
+    }
+  });
+
   app.delete("/api/sessions/:sessionId", async (req: Request, res: Response) => {
     if (!req.session.character) {
       res.status(401).json({ error: "Not authenticated" });
@@ -12817,6 +12963,1263 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Gap analysis error:", error);
       res.status(500).json({ error: "Failed to calculate gap analysis" });
+    }
+  });
+
+  // ============================================================================
+  // NEW FEATURE ENDPOINTS (v0.6.0)
+  // ============================================================================
+
+  // 1. Jump Clones - GET /api/character/clones
+  // ESI scope: esi-clones.read_clones.v1
+  app.get("/api/character/clones", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const token = await refreshTokenIfNeeded(req);
+      if (!token) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+      const characterId = req.session.character.characterId;
+      const characterName = req.session.character.characterName;
+
+      // Fetch clone data and active implants in parallel
+      const [clonesRes, implantsRes] = await Promise.all([
+        fetch(`${ESI_BASE_URL}/characters/${characterId}/clones/?datasource=tranquility`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${ESI_BASE_URL}/characters/${characterId}/implants/?datasource=tranquility`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      if (!clonesRes.ok) {
+        res.status(clonesRes.status).json({ error: "Failed to fetch clone data from ESI" });
+        return;
+      }
+      if (!implantsRes.ok) {
+        res.status(implantsRes.status).json({ error: "Failed to fetch implants data from ESI" });
+        return;
+      }
+
+      const clonesData = await clonesRes.json();
+      const activeImplantTypeIds: number[] = await implantsRes.json();
+
+      // Collect all type IDs for name resolution
+      const jumpClones: any[] = clonesData.jump_clones || [];
+      const allTypeIds = new Set<number>();
+      for (const clone of jumpClones) {
+        for (const typeId of (clone.implants || [])) {
+          allTypeIds.add(typeId);
+        }
+      }
+      for (const typeId of activeImplantTypeIds) {
+        allTypeIds.add(typeId);
+      }
+
+      // Resolve type names
+      const typeNames = new Map<number, string>();
+      if (allTypeIds.size > 0) {
+        try {
+          const namesRes = await fetch(`${ESI_BASE_URL}/universe/names/?datasource=tranquility`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(Array.from(allTypeIds)),
+          });
+          if (namesRes.ok) {
+            const namesData = await namesRes.json();
+            for (const item of namesData) {
+              typeNames.set(item.id, item.name);
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to resolve implant type names:", err);
+        }
+      }
+
+      // Collect location IDs for name resolution
+      const locationIds = new Set<number>();
+      if (clonesData.home_location?.location_id) {
+        locationIds.add(clonesData.home_location.location_id);
+      }
+      for (const clone of jumpClones) {
+        if (clone.location_id) locationIds.add(clone.location_id);
+      }
+
+      // Resolve location names
+      const locationNames = new Map<number, string>();
+      for (const locationId of Array.from(locationIds)) {
+        try {
+          if (locationId < 64000000) {
+            // NPC station
+            const stationRes = await fetch(
+              `${ESI_BASE_URL}/universe/stations/${locationId}/?datasource=tranquility`,
+              { headers: { Accept: "application/json" } }
+            );
+            if (stationRes.ok) {
+              const data = await stationRes.json();
+              locationNames.set(locationId, data.name);
+            }
+          } else {
+            // Player structure - requires auth token
+            const structureRes = await fetch(
+              `${ESI_BASE_URL}/universe/structures/${locationId}/?datasource=tranquility`,
+              { headers: { Authorization: `Bearer ${token}`, Accept: "application/json" } }
+            );
+            if (structureRes.ok) {
+              const data = await structureRes.json();
+              locationNames.set(locationId, data.name);
+            } else if (structureRes.status === 403) {
+              locationNames.set(locationId, "Private Structure");
+            }
+          }
+        } catch (err) {
+          console.warn(`Failed to resolve clone location ${locationId}:`, err);
+        }
+      }
+
+      const homeLocation = clonesData.home_location
+        ? {
+            locationId: clonesData.home_location.location_id,
+            locationType: clonesData.home_location.location_type,
+            locationName: locationNames.get(clonesData.home_location.location_id) || null,
+          }
+        : null;
+
+      const resolvedJumpClones = jumpClones.map((clone: any) => ({
+        id: clone.jump_clone_id,
+        locationId: clone.location_id,
+        locationType: clone.location_type,
+        locationName: locationNames.get(clone.location_id) || null,
+        implants: (clone.implants || []).map((typeId: number) => ({
+          typeId,
+          name: typeNames.get(typeId) || `Item ${typeId}`,
+        })),
+      }));
+
+      const resolvedActiveImplants = activeImplantTypeIds.map((typeId) => ({
+        typeId,
+        name: typeNames.get(typeId) || `Item ${typeId}`,
+      }));
+
+      res.json({
+        homeLocation,
+        jumpClones: resolvedJumpClones,
+        activeImplants: resolvedActiveImplants,
+        characterName,
+      });
+    } catch (error) {
+      console.error("Clones error:", error);
+      res.status(500).json({ error: "Failed to fetch clone data" });
+    }
+  });
+
+  // 2. Wallet Transactions - GET /api/wallet/transactions
+  // ESI scope: esi-wallet.read_character_wallet.v1
+  app.get("/api/wallet/transactions", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const viewAll = req.query.viewAll === "true";
+      const page = parseInt((req.query.page as string) || "1", 10);
+      const primaryCharacterId = req.session.character.characterId;
+      const primaryCharacterName = req.session.character.characterName;
+
+      // Helper to fetch and enrich transactions for one character
+      const fetchCharacterTransactions = async (charId: number, charToken: string, charName: string): Promise<any[]> => {
+        const txRes = await fetch(
+          `${ESI_BASE_URL}/characters/${charId}/wallet/transactions/?datasource=tranquility&page=${page}`,
+          { headers: { Authorization: `Bearer ${charToken}` } }
+        );
+        if (!txRes.ok) return [];
+        const transactions: any[] = await txRes.json();
+
+        // Collect type IDs and location IDs
+        const typeIds = Array.from(new Set(transactions.map((t: any) => t.type_id as number)));
+        const locationIds = Array.from(new Set(transactions.map((t: any) => t.location_id as number)));
+
+        const typeNames = new Map<number, string>();
+        const locationNames = new Map<number, string>();
+
+        // Resolve type names
+        if (typeIds.length > 0) {
+          try {
+            const namesRes = await fetch(`${ESI_BASE_URL}/universe/names/?datasource=tranquility`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(typeIds),
+            });
+            if (namesRes.ok) {
+              const namesData = await namesRes.json();
+              for (const item of namesData) {
+                typeNames.set(item.id, item.name);
+              }
+            }
+          } catch (err) {
+            console.warn("Failed to resolve transaction type names:", err);
+          }
+        }
+
+        // Resolve location names (stations only for transactions)
+        for (const locationId of locationIds) {
+          try {
+            const stationRes = await fetch(
+              `${ESI_BASE_URL}/universe/stations/${locationId}/?datasource=tranquility`,
+              { headers: { Accept: "application/json" } }
+            );
+            if (stationRes.ok) {
+              const data = await stationRes.json();
+              locationNames.set(locationId, data.name);
+            }
+          } catch (err) {
+            console.warn(`Failed to resolve transaction location ${locationId}:`, err);
+          }
+        }
+
+        return transactions.map((t: any) => ({
+          ...t,
+          typeName: typeNames.get(t.type_id) || `Item ${t.type_id}`,
+          locationName: locationNames.get(t.location_id) || null,
+          characterId: charId,
+          characterName: charName,
+        }));
+      }
+
+      let allTransactions: any[] = [];
+
+      if (viewAll) {
+        const primaryToken = await refreshTokenIfNeeded(req);
+        if (primaryToken) {
+          const txs = await fetchCharacterTransactions(primaryCharacterId, primaryToken, primaryCharacterName);
+          allTransactions = [...allTransactions, ...txs];
+        }
+        const linkedCharacters = await storage.getLinkedCharacters(primaryCharacterId);
+        for (const linkedChar of linkedCharacters) {
+          if (!linkedChar.isActive) continue;
+          const linkedToken = await refreshLinkedCharacterToken(linkedChar);
+          if (!linkedToken) continue;
+          const txs = await fetchCharacterTransactions(linkedChar.characterId, linkedToken, linkedChar.characterName);
+          allTransactions = [...allTransactions, ...txs];
+        }
+      } else {
+        const activeCharacterId = req.session.activeCharacterId || primaryCharacterId;
+        let activeToken: string | null = null;
+        let activeCharacterName = primaryCharacterName;
+        if (activeCharacterId === primaryCharacterId) {
+          activeToken = await refreshTokenIfNeeded(req);
+        } else {
+          const linkedChar = await storage.getLinkedCharacter(activeCharacterId);
+          if (linkedChar) {
+            activeToken = await refreshLinkedCharacterToken(linkedChar);
+            activeCharacterName = linkedChar.characterName;
+          }
+        }
+        if (!activeToken) {
+          res.status(401).json({ error: "Unauthorized" });
+          return;
+        }
+        allTransactions = await fetchCharacterTransactions(activeCharacterId, activeToken, activeCharacterName);
+      }
+
+      // Sort by date descending
+      allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      res.json({
+        transactions: allTransactions,
+        characterId: primaryCharacterId,
+        characterName: primaryCharacterName,
+      });
+    } catch (error) {
+      console.error("Wallet transactions error:", error);
+      res.status(500).json({ error: "Failed to fetch wallet transactions" });
+    }
+  });
+
+  // 3. Loyalty Points - GET /api/character/loyalty
+  // No special ESI scope required (uses wallet auth token)
+  app.get("/api/character/loyalty", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const viewAll = req.query.viewAll === "true";
+      const primaryCharacterId = req.session.character.characterId;
+      const primaryCharacterName = req.session.character.characterName;
+
+      const fetchLoyaltyPoints = async (charId: number, charToken: string): Promise<{ corporationId: number; points: number }[]> => {
+        const res = await fetch(
+          `${ESI_BASE_URL}/characters/${charId}/loyalty/points/?datasource=tranquility`,
+          { headers: { Authorization: `Bearer ${charToken}` } }
+        );
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data.map((item: any) => ({ corporationId: item.corporation_id, points: item.loyalty_points }));
+      }
+
+      let combinedPoints: { corporationId: number; points: number }[] = [];
+
+      if (viewAll) {
+        const primaryToken = await refreshTokenIfNeeded(req);
+        if (primaryToken) {
+          const lp = await fetchLoyaltyPoints(primaryCharacterId, primaryToken);
+          combinedPoints = [...combinedPoints, ...lp];
+        }
+        const linkedCharacters = await storage.getLinkedCharacters(primaryCharacterId);
+        for (const linkedChar of linkedCharacters) {
+          if (!linkedChar.isActive) continue;
+          const linkedToken = await refreshLinkedCharacterToken(linkedChar);
+          if (!linkedToken) continue;
+          const lp = await fetchLoyaltyPoints(linkedChar.characterId, linkedToken);
+          combinedPoints = [...combinedPoints, ...lp];
+        }
+        // Merge by corporation (sum points)
+        const merged = new Map<number, number>();
+        for (const lp of combinedPoints) {
+          merged.set(lp.corporationId, (merged.get(lp.corporationId) || 0) + lp.points);
+        }
+        combinedPoints = Array.from(merged.entries()).map(([corporationId, points]) => ({ corporationId, points }));
+      } else {
+        const activeCharacterId = req.session.activeCharacterId || primaryCharacterId;
+        let activeToken: string | null = null;
+        if (activeCharacterId === primaryCharacterId) {
+          activeToken = await refreshTokenIfNeeded(req);
+        } else {
+          const linkedChar = await storage.getLinkedCharacter(activeCharacterId);
+          if (linkedChar) activeToken = await refreshLinkedCharacterToken(linkedChar);
+        }
+        if (!activeToken) {
+          res.status(401).json({ error: "Unauthorized" });
+          return;
+        }
+        combinedPoints = await fetchLoyaltyPoints(activeCharacterId, activeToken);
+      }
+
+      // Resolve corporation names
+      const corpIds = Array.from(new Set(combinedPoints.map((lp) => lp.corporationId)));
+      const corpNames = new Map<number, string>();
+      if (corpIds.length > 0) {
+        try {
+          const namesRes = await fetch(`${ESI_BASE_URL}/universe/names/?datasource=tranquility`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(corpIds),
+          });
+          if (namesRes.ok) {
+            const namesData = await namesRes.json();
+            for (const item of namesData) {
+              corpNames.set(item.id, item.name);
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to resolve corporation names for loyalty points:", err);
+        }
+      }
+
+      const loyaltyPoints = combinedPoints.map((lp) => ({
+        corporationId: lp.corporationId,
+        corporationName: corpNames.get(lp.corporationId) || `Corporation ${lp.corporationId}`,
+        points: lp.points,
+      }));
+
+      // Sort by points descending
+      loyaltyPoints.sort((a, b) => b.points - a.points);
+
+      res.json({
+        loyaltyPoints,
+        characterName: primaryCharacterName,
+      });
+    } catch (error) {
+      console.error("Loyalty points error:", error);
+      res.status(500).json({ error: "Failed to fetch loyalty points" });
+    }
+  });
+
+  // 4. NPC Standings - GET /api/character/standings
+  // ESI scope: esi-characters.read_standings.v1
+  app.get("/api/character/standings", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const token = await refreshTokenIfNeeded(req);
+      if (!token) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+      const characterId = req.session.character.characterId;
+      const characterName = req.session.character.characterName;
+
+      const standingsRes = await fetch(
+        `${ESI_BASE_URL}/characters/${characterId}/standings/?datasource=tranquility`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!standingsRes.ok) {
+        res.status(standingsRes.status).json({ error: "Failed to fetch standings from ESI" });
+        return;
+      }
+      const standingsData: any[] = await standingsRes.json();
+
+      // Resolve names for all from_ids
+      const fromIds = Array.from(new Set(standingsData.map((s: any) => s.from_id as number)));
+      const entityNames = new Map<number, string>();
+      if (fromIds.length > 0) {
+        try {
+          const namesRes = await fetch(`${ESI_BASE_URL}/universe/names/?datasource=tranquility`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(fromIds),
+          });
+          if (namesRes.ok) {
+            const namesData = await namesRes.json();
+            for (const item of namesData) {
+              entityNames.set(item.id, item.name);
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to resolve standings entity names:", err);
+        }
+      }
+
+      const standings = standingsData
+        .map((s: any) => ({
+          fromId: s.from_id,
+          fromType: s.from_type,
+          name: entityNames.get(s.from_id) || `Entity ${s.from_id}`,
+          standing: s.standing,
+        }))
+        .sort((a, b) => b.standing - a.standing);
+
+      res.json({ standings, characterName });
+    } catch (error) {
+      console.error("Standings error:", error);
+      res.status(500).json({ error: "Failed to fetch standings" });
+    }
+  });
+
+  // 5. Notifications - GET /api/character/notifications
+  // ESI scope: esi-characters.read_notifications.v1
+  app.get("/api/character/notifications", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const token = await refreshTokenIfNeeded(req);
+      if (!token) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+      const characterId = req.session.character.characterId;
+      const characterName = req.session.character.characterName;
+
+      const notifRes = await fetch(
+        `${ESI_BASE_URL}/characters/${characterId}/notifications/?datasource=tranquility`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!notifRes.ok) {
+        res.status(notifRes.status).json({ error: "Failed to fetch notifications from ESI" });
+        return;
+      }
+      const notifData: any[] = await notifRes.json();
+
+      // Sort by timestamp desc, return last 50
+      notifData.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      const notifications = notifData.slice(0, 50).map((n: any) => ({
+        id: n.notification_id,
+        type: n.type,
+        timestamp: n.timestamp,
+        isRead: n.is_read,
+        text: n.text || null,
+      }));
+
+      res.json({ notifications, characterName });
+    } catch (error) {
+      console.error("Notifications error:", error);
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  // 6. Killmail List - GET /api/character/killmails
+  // ESI scope: esi-killmails.read_killmails.v1
+  app.get("/api/character/killmails", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const token = await refreshTokenIfNeeded(req);
+      if (!token) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+      const characterId = req.session.character.characterId;
+      const characterName = req.session.character.characterName;
+      const filterType = (req.query.type as string) || "kills";
+      const page = parseInt((req.query.page as string) || "1", 10);
+
+      // Fetch recent killmail references
+      const recentRes = await fetch(
+        `${ESI_BASE_URL}/characters/${characterId}/killmails/recent/?datasource=tranquility`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!recentRes.ok) {
+        res.status(recentRes.status).json({ error: "Failed to fetch killmails from ESI" });
+        return;
+      }
+      const recentKillmails: { killmail_id: number; killmail_hash: string }[] = await recentRes.json();
+
+      // Fetch full killmail details (limit to avoid too many ESI calls)
+      const pageSize = 20;
+      const start = (page - 1) * pageSize;
+      const pageRefs = recentKillmails.slice(start, start + pageSize * 3); // fetch extra to allow filtering
+
+      const fullKillmails: any[] = [];
+      for (const ref of pageRefs) {
+        try {
+          const kmRes = await fetch(
+            `${ESI_BASE_URL}/killmails/${ref.killmail_id}/${ref.killmail_hash}/?datasource=tranquility`,
+            { headers: { Accept: "application/json" } }
+          );
+          if (kmRes.ok) {
+            const km = await kmRes.json();
+            fullKillmails.push({ ...km, killmail_hash: ref.killmail_hash });
+          }
+        } catch (err) {
+          console.warn(`Failed to fetch killmail ${ref.killmail_id}:`, err);
+        }
+      }
+
+      // Filter by kills or losses
+      let filtered = fullKillmails;
+      if (filterType === "losses") {
+        filtered = fullKillmails.filter(
+          (km: any) => km.victim?.character_id === characterId
+        );
+      } else {
+        // kills: character is among attackers
+        filtered = fullKillmails.filter(
+          (km: any) =>
+            km.victim?.character_id !== characterId &&
+            (km.attackers || []).some((a: any) => a.character_id === characterId)
+        );
+      }
+
+      // Trim to page size
+      const paginated = filtered.slice(0, pageSize);
+
+      // Collect type IDs (ship types) and system IDs for resolution
+      const typeIds = new Set<number>();
+      const systemIds = new Set<number>();
+      for (const km of paginated) {
+        if (km.victim?.ship_type_id) typeIds.add(km.victim.ship_type_id);
+        if (km.solar_system_id) systemIds.add(km.solar_system_id);
+      }
+
+      const typeNames = new Map<number, string>();
+      const systemNames = new Map<number, string>();
+
+      if (typeIds.size > 0 || systemIds.size > 0) {
+        try {
+          const idsToResolve = Array.from(typeIds).concat(Array.from(systemIds));
+          const namesRes = await fetch(`${ESI_BASE_URL}/universe/names/?datasource=tranquility`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(idsToResolve),
+          });
+          if (namesRes.ok) {
+            const namesData = await namesRes.json();
+            for (const item of namesData) {
+              if (typeIds.has(item.id)) typeNames.set(item.id, item.name);
+              if (systemIds.has(item.id)) systemNames.set(item.id, item.name);
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to resolve killmail names:", err);
+        }
+      }
+
+      const killmails = paginated.map((km: any) => {
+        return {
+          id: km.killmail_id,
+          hash: km.killmail_hash,
+          time: km.killmail_time,
+          systemId: km.solar_system_id,
+          systemName: systemNames.get(km.solar_system_id) || `System ${km.solar_system_id}`,
+          victimShipTypeId: km.victim?.ship_type_id || null,
+          victimShipName: km.victim?.ship_type_id ? (typeNames.get(km.victim.ship_type_id) || `Ship ${km.victim.ship_type_id}`) : null,
+          iskLost: km.victim?.items
+            ? km.victim.items.reduce((sum: number, item: any) => sum + (item.quantity_destroyed || 0), 0)
+            : 0,
+          isKill: filterType === "kills",
+          attackerCount: (km.attackers || []).length,
+        };
+      });
+
+      res.json({
+        killmails,
+        total: recentKillmails.length,
+        characterName,
+      });
+    } catch (error) {
+      console.error("Killmails error:", error);
+      res.status(500).json({ error: "Failed to fetch killmails" });
+    }
+  });
+
+  // 7a. Net Worth History - GET /api/analytics/net-worth/history
+  app.get("/api/analytics/net-worth/history", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const characterId = req.session.character.characterId;
+      const days = parseInt((req.query.days as string) || "30", 10);
+      const history = await storage.getNetWorthHistory(characterId, days);
+      res.json({ history, characterId });
+    } catch (error) {
+      console.error("Net worth history error:", error);
+      res.status(500).json({ error: "Failed to fetch net worth history" });
+    }
+  });
+
+  // 7b. Net Worth Snapshot - POST /api/analytics/net-worth/snapshot
+  app.post("/api/analytics/net-worth/snapshot", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const characterId = req.session.character.characterId;
+      const { totalValue } = req.body;
+      if (typeof totalValue !== "number" || isNaN(totalValue)) {
+        res.status(400).json({ error: "Invalid totalValue: must be a number" });
+        return;
+      }
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      await storage.saveNetWorthSnapshot(characterId, today, totalValue);
+      res.json({ success: true, date: today, totalValue });
+    } catch (error) {
+      console.error("Net worth snapshot error:", error);
+      res.status(500).json({ error: "Failed to save net worth snapshot" });
+    }
+  });
+
+  // ============================================================================
+  // NEW FEATURE ENDPOINTS (v0.7.0)
+  // ============================================================================
+
+  // Shared helper: resolve a set of IDs to names via ESI /universe/names/ (batched by 1000)
+  async function resolveNames(ids: number[]): Promise<Map<number, { name: string; category: string }>> {
+    const out = new Map<number, { name: string; category: string }>();
+    const unique = Array.from(new Set(ids)).filter((n) => n > 0);
+    for (let i = 0; i < unique.length; i += 1000) {
+      const batch = unique.slice(i, i + 1000);
+      try {
+        const r = await fetch(`${ESI_BASE_URL}/universe/names/?datasource=tranquility`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(batch),
+        });
+        if (r.ok) {
+          const data = await r.json();
+          for (const item of data) out.set(item.id, { name: item.name, category: item.category });
+        }
+      } catch (err) {
+        console.warn("resolveNames batch failed:", err);
+      }
+    }
+    return out;
+  }
+
+  // Shared helper: resolve station/structure location names (NPC stations public, structures need token)
+  async function resolveLocationNames(locationIds: number[], token: string): Promise<Map<number, string>> {
+    const names = new Map<number, string>();
+    const unique = Array.from(new Set(locationIds)).filter((n) => n > 0);
+    const stationIds = unique.filter((id) => id < 100000000);
+    const structureIds = unique.filter((id) => id >= 100000000);
+    // NPC stations via /universe/names/ (batched)
+    if (stationIds.length > 0) {
+      const resolved = await resolveNames(stationIds);
+      for (const [id, info] of resolved) names.set(id, info.name);
+    }
+    // Player structures one-by-one (auth required)
+    for (const id of structureIds) {
+      try {
+        const r = await fetch(`${ESI_BASE_URL}/universe/structures/${id}/?datasource=tranquility`, {
+          headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+        });
+        if (r.ok) {
+          const data = await r.json();
+          names.set(id, data.name);
+        } else if (r.status === 403) {
+          names.set(id, "Private Structure");
+        }
+      } catch { /* ignore */ }
+    }
+    return names;
+  }
+
+  // 1. Blueprint Library - GET /api/character/blueprints
+  // ESI scope: esi-characters.read_blueprints.v1
+  app.get("/api/character/blueprints", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const token = await refreshTokenIfNeeded(req);
+      if (!token) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+      const characterId = req.session.character.characterId;
+
+      // Blueprints are paginated
+      const all: any[] = [];
+      for (let page = 1; page <= 20; page++) {
+        const r = await fetch(
+          `${ESI_BASE_URL}/characters/${characterId}/blueprints/?datasource=tranquility&page=${page}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!r.ok) {
+          if (page === 1) {
+            res.status(r.status).json({ error: "Failed to fetch blueprints from ESI" });
+            return;
+          }
+          break;
+        }
+        const batch = await r.json();
+        if (!Array.isArray(batch) || batch.length === 0) break;
+        all.push(...batch);
+        if (batch.length < 1000) break;
+      }
+
+      const typeNames = await resolveNames(all.map((b) => b.type_id));
+      const locationNames = await resolveLocationNames(all.map((b) => b.location_id), token);
+
+      // type names also include their group/category via a second pass would need SDE;
+      // keep it light here — the page groups by name prefix / BPO vs BPC.
+      const blueprints = all.map((b) => ({
+        itemId: b.item_id,
+        typeId: b.type_id,
+        typeName: typeNames.get(b.type_id)?.name || `Type ${b.type_id}`,
+        locationId: b.location_id,
+        locationName: locationNames.get(b.location_id) || `Location ${String(b.location_id).slice(-6)}`,
+        locationFlag: b.location_flag,
+        materialEfficiency: b.material_efficiency,
+        timeEfficiency: b.time_efficiency,
+        quantity: b.quantity, // -1 = BPO (original), -2 = BPC stack
+        runs: b.runs, // -1 = infinite (BPO)
+        isOriginal: b.quantity === -1 || b.runs === -1,
+      }));
+
+      // Summary stats
+      const originals = blueprints.filter((b) => b.isOriginal).length;
+      const copies = blueprints.length - originals;
+
+      res.json({
+        blueprints,
+        summary: { total: blueprints.length, originals, copies },
+        characterName: req.session.character.characterName,
+      });
+    } catch (error) {
+      console.error("Blueprints error:", error);
+      res.status(500).json({ error: "Failed to fetch blueprints" });
+    }
+  });
+
+  // 2. Market Order Manager - GET /api/market/orders
+  // ESI scope: esi-markets.read_character_orders.v1
+  app.get("/api/character/market-orders", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const token = await refreshTokenIfNeeded(req);
+      if (!token) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+      const characterId = req.session.character.characterId;
+
+      const [activeRes, historyRes] = await Promise.all([
+        fetch(`${ESI_BASE_URL}/characters/${characterId}/orders/?datasource=tranquility`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${ESI_BASE_URL}/characters/${characterId}/orders/history/?datasource=tranquility`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      if (!activeRes.ok) {
+        res.status(activeRes.status).json({ error: "Failed to fetch market orders from ESI" });
+        return;
+      }
+      const active: any[] = await activeRes.json();
+      const history: any[] = historyRes.ok ? await historyRes.json() : [];
+
+      // Resolve type + location names across both sets
+      const allTypeIds = [...active, ...history].map((o) => o.type_id);
+      const allLocIds = [...active, ...history].map((o) => o.location_id);
+      const typeNames = await resolveNames(allTypeIds);
+      const locationNames = await resolveLocationNames(allLocIds, token);
+
+      // Outbid detection for ACTIVE orders via Fuzzwork aggregates, grouped by region
+      const byRegion = new Map<number, Set<number>>();
+      for (const o of active) {
+        if (!o.region_id) continue;
+        if (!byRegion.has(o.region_id)) byRegion.set(o.region_id, new Set());
+        byRegion.get(o.region_id)!.add(o.type_id);
+      }
+      // region -> typeId -> { buyMax, sellMin }
+      const marketRef = new Map<number, Map<number, { buyMax: number; sellMin: number }>>();
+      for (const [regionId, typeSet] of byRegion) {
+        const types = Array.from(typeSet);
+        const refMap = new Map<number, { buyMax: number; sellMin: number }>();
+        try {
+          // Fuzzwork aggregates: many types in one call
+          const url = `https://market.fuzzwork.co.uk/aggregates/?region=${regionId}&types=${types.join(",")}`;
+          const r = await fetch(url, { headers: { "User-Agent": "PHOTON-EVE-Tracker/0.7" } });
+          if (r.ok) {
+            const data = await r.json();
+            for (const tid of types) {
+              const entry = data[String(tid)];
+              if (entry) {
+                refMap.set(tid, {
+                  buyMax: parseFloat(entry.buy?.max ?? "0") || 0,
+                  sellMin: parseFloat(entry.sell?.min ?? "0") || 0,
+                });
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`Fuzzwork aggregates failed for region ${regionId}:`, err);
+        }
+        marketRef.set(regionId, refMap);
+      }
+
+      const mapOrder = (o: any, isActive: boolean) => {
+        const ref = isActive ? marketRef.get(o.region_id)?.get(o.type_id) : undefined;
+        let outbid = false;
+        let bestPrice: number | null = null;
+        if (ref) {
+          if (o.is_buy_order) {
+            bestPrice = ref.buyMax;
+            outbid = ref.buyMax > o.price + 0.001; // someone bidding higher
+          } else {
+            bestPrice = ref.sellMin;
+            outbid = ref.sellMin > 0 && ref.sellMin < o.price - 0.001; // someone selling cheaper
+          }
+        }
+        const issued = new Date(o.issued).getTime();
+        const expires = issued + (o.duration || 0) * 86400000;
+        return {
+          orderId: o.order_id,
+          typeId: o.type_id,
+          typeName: typeNames.get(o.type_id)?.name || `Type ${o.type_id}`,
+          locationId: o.location_id,
+          locationName: locationNames.get(o.location_id) || `Location ${String(o.location_id).slice(-6)}`,
+          regionId: o.region_id,
+          isBuyOrder: !!o.is_buy_order,
+          price: o.price,
+          volumeRemain: o.volume_remain,
+          volumeTotal: o.volume_total,
+          issued: o.issued,
+          duration: o.duration,
+          expiresAt: new Date(expires).toISOString(),
+          escrow: o.escrow ?? null,
+          state: o.state || (isActive ? "open" : "unknown"),
+          outbid,
+          bestPrice,
+        };
+      };
+
+      const activeOrders = active.map((o) => mapOrder(o, true));
+      const historyOrders = history.map((o) => mapOrder(o, false))
+        .sort((a, b) => new Date(b.issued).getTime() - new Date(a.issued).getTime())
+        .slice(0, 100);
+
+      const sellEscrow = activeOrders.filter((o) => !o.isBuyOrder).reduce((s, o) => s + o.price * o.volumeRemain, 0);
+      const buyEscrow = activeOrders.filter((o) => o.isBuyOrder).reduce((s, o) => s + (o.escrow || 0), 0);
+      const outbidCount = activeOrders.filter((o) => o.outbid).length;
+
+      res.json({
+        activeOrders,
+        historyOrders,
+        summary: {
+          activeCount: activeOrders.length,
+          sellOrders: activeOrders.filter((o) => !o.isBuyOrder).length,
+          buyOrders: activeOrders.filter((o) => o.isBuyOrder).length,
+          outbidCount,
+          sellValueRemaining: sellEscrow,
+          buyEscrow,
+        },
+        characterName: req.session.character.characterName,
+      });
+    } catch (error) {
+      console.error("Market orders error:", error);
+      res.status(500).json({ error: "Failed to fetch market orders" });
+    }
+  });
+
+  // 3. Route Danger Data - GET /api/map/danger
+  // Public ESI: /universe/system_kills/ (ship+pod+npc kills per system, last hour)
+  let dangerCache: { ts: number; data: any } | null = null;
+  app.get("/api/map/danger", async (_req: Request, res: Response) => {
+    try {
+      // Cache for 5 minutes (ESI updates hourly anyway)
+      if (dangerCache && Date.now() - dangerCache.ts < 5 * 60 * 1000) {
+        res.json(dangerCache.data);
+        return;
+      }
+      const [killsRes, jumpsRes] = await Promise.all([
+        fetch(`${ESI_BASE_URL}/universe/system_kills/?datasource=tranquility`),
+        fetch(`${ESI_BASE_URL}/universe/system_jumps/?datasource=tranquility`),
+      ]);
+      if (!killsRes.ok) {
+        res.status(killsRes.status).json({ error: "Failed to fetch system kills from ESI" });
+        return;
+      }
+      const kills: any[] = await killsRes.json();
+      const jumps: any[] = jumpsRes.ok ? await jumpsRes.json() : [];
+
+      const systems: Record<string, { shipKills: number; podKills: number; npcKills: number; jumps: number }> = {};
+      for (const k of kills) {
+        systems[k.system_id] = {
+          shipKills: k.ship_kills || 0,
+          podKills: k.pod_kills || 0,
+          npcKills: k.npc_kills || 0,
+          jumps: 0,
+        };
+      }
+      for (const j of jumps) {
+        if (systems[j.system_id]) systems[j.system_id].jumps = j.ship_jumps || 0;
+        else systems[j.system_id] = { shipKills: 0, podKills: 0, npcKills: 0, jumps: j.ship_jumps || 0 };
+      }
+
+      const payload = { systems, updatedAt: new Date().toISOString() };
+      dangerCache = { ts: Date.now(), data: payload };
+      res.json(payload);
+    } catch (error) {
+      console.error("Danger map error:", error);
+      res.status(500).json({ error: "Failed to fetch danger data" });
+    }
+  });
+
+  // 4. Unified Timer Dashboard - GET /api/timers
+  // Aggregates every time-sensitive event from across the character's ESI data.
+  app.get("/api/timers", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const token = await refreshTokenIfNeeded(req);
+      if (!token) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+      const characterId = req.session.character.characterId;
+      const auth = { headers: { Authorization: `Bearer ${token}` } };
+      const timers: Array<{ category: string; label: string; detail: string; endsAt: string | null; meta?: any }> = [];
+      const typeIdsToResolve = new Set<number>();
+      const pendingTypeLabels: Array<{ idx: number; typeId: number; prefix: string }> = [];
+
+      // --- Industry jobs ---
+      try {
+        const r = await fetch(`${ESI_BASE_URL}/characters/${characterId}/industry/jobs/?datasource=tranquility&include_completed=false`, auth);
+        if (r.ok) {
+          const jobs: any[] = await r.json();
+          const activityNames: Record<number, string> = { 1: "Manufacturing", 3: "TE Research", 4: "ME Research", 5: "Copying", 8: "Invention", 9: "Reactions" };
+          for (const j of jobs) {
+            if (j.status === "delivered" || j.status === "cancelled") continue;
+            const idx = timers.length;
+            timers.push({
+              category: "industry",
+              label: activityNames[j.activity_id] || "Industry Job",
+              detail: `Blueprint ${j.blueprint_type_id}`,
+              endsAt: j.end_date,
+            });
+            typeIdsToResolve.add(j.blueprint_type_id);
+            pendingTypeLabels.push({ idx, typeId: j.blueprint_type_id, prefix: activityNames[j.activity_id] || "Job" });
+          }
+        }
+      } catch (err) { console.warn("timers: industry failed", err); }
+
+      // --- Skill queue ---
+      try {
+        const r = await fetch(`${ESI_BASE_URL}/characters/${characterId}/skillqueue/?datasource=tranquility`, auth);
+        if (r.ok) {
+          const queue: any[] = await r.json();
+          const now = Date.now();
+          // currently-training skill = the one whose finish_date is next in the future
+          const training = queue.filter((s) => s.finish_date && new Date(s.finish_date).getTime() > now)
+            .sort((a, b) => new Date(a.finish_date).getTime() - new Date(b.finish_date).getTime());
+          if (training.length > 0) {
+            const cur = training[0];
+            const idx = timers.length;
+            timers.push({ category: "skill", label: "Skill finishing", detail: `Skill ${cur.skill_id} → L${cur.finished_level}`, endsAt: cur.finish_date });
+            typeIdsToResolve.add(cur.skill_id);
+            pendingTypeLabels.push({ idx, typeId: cur.skill_id, prefix: `Training to L${cur.finished_level}:` });
+            // whole queue end
+            const last = training[training.length - 1];
+            if (last !== cur) {
+              timers.push({ category: "skill", label: "Skill queue empty", detail: `${training.length} skills queued`, endsAt: last.finish_date });
+            }
+          } else {
+            timers.push({ category: "skill", label: "Skill queue EMPTY", detail: "No skills training", endsAt: null, meta: { warning: true } });
+          }
+        }
+      } catch (err) { console.warn("timers: skillqueue failed", err); }
+
+      // --- Market orders (expiry) ---
+      try {
+        const r = await fetch(`${ESI_BASE_URL}/characters/${characterId}/orders/?datasource=tranquility`, auth);
+        if (r.ok) {
+          const orders: any[] = await r.json();
+          for (const o of orders) {
+            const expires = new Date(o.issued).getTime() + (o.duration || 0) * 86400000;
+            const idx = timers.length;
+            timers.push({
+              category: "market",
+              label: `${o.is_buy_order ? "Buy" : "Sell"} order expires`,
+              detail: `Type ${o.type_id} ×${o.volume_remain}`,
+              endsAt: new Date(expires).toISOString(),
+            });
+            typeIdsToResolve.add(o.type_id);
+            pendingTypeLabels.push({ idx, typeId: o.type_id, prefix: `${o.is_buy_order ? "Buy" : "Sell"} order:` });
+          }
+        }
+      } catch (err) { console.warn("timers: orders failed", err); }
+
+      // --- Contracts (outstanding, expiring) ---
+      try {
+        const r = await fetch(`${ESI_BASE_URL}/characters/${characterId}/contracts/?datasource=tranquility`, auth);
+        if (r.ok) {
+          const contracts: any[] = await r.json();
+          for (const c of contracts) {
+            if (c.status !== "outstanding" && c.status !== "in_progress") continue;
+            if (!c.date_expired) continue;
+            timers.push({
+              category: "contract",
+              label: `${(c.type || "contract").replace(/_/g, " ")} expires`,
+              detail: c.title || `Contract ${c.contract_id}`,
+              endsAt: c.date_expired,
+            });
+          }
+        }
+      } catch (err) { console.warn("timers: contracts failed", err); }
+
+      // --- Jump clone cooldown ---
+      try {
+        const r = await fetch(`${ESI_BASE_URL}/characters/${characterId}/clones/?datasource=tranquility`, auth);
+        if (r.ok) {
+          const data = await r.json();
+          if (data.last_clone_jump_date) {
+            const ready = new Date(data.last_clone_jump_date).getTime() + 24 * 3600 * 1000;
+            timers.push({
+              category: "clone",
+              label: "Jump clone ready",
+              detail: ready > Date.now() ? "Cooldown active" : "Ready to jump",
+              endsAt: new Date(ready).toISOString(),
+            });
+          }
+        }
+      } catch (err) { console.warn("timers: clones failed", err); }
+
+      // --- PI extractor cycles ---
+      try {
+        const r = await fetch(`${ESI_BASE_URL}/characters/${characterId}/planets/?datasource=tranquility`, auth);
+        if (r.ok) {
+          const planets: any[] = await r.json();
+          // Limit to avoid excessive calls
+          for (const planet of planets.slice(0, 12)) {
+            try {
+              const pr = await fetch(`${ESI_BASE_URL}/characters/${characterId}/planets/${planet.planet_id}/?datasource=tranquility`, auth);
+              if (!pr.ok) continue;
+              const detail = await pr.json();
+              let soonest: number | null = null;
+              for (const pin of detail.pins || []) {
+                if (pin.expiry_time) {
+                  const t = new Date(pin.expiry_time).getTime();
+                  if (soonest === null || t < soonest) soonest = t;
+                }
+              }
+              if (soonest !== null) {
+                timers.push({
+                  category: "pi",
+                  label: "PI extractor expires",
+                  detail: `Planet ${planet.planet_id} (${planet.planet_type})`,
+                  endsAt: new Date(soonest).toISOString(),
+                });
+              }
+            } catch { /* ignore single planet */ }
+          }
+        }
+      } catch (err) { console.warn("timers: planets failed", err); }
+
+      // Resolve type names and patch details
+      if (typeIdsToResolve.size > 0) {
+        const names = await resolveNames(Array.from(typeIdsToResolve));
+        for (const p of pendingTypeLabels) {
+          const nm = names.get(p.typeId)?.name;
+          if (nm) timers[p.idx].detail = `${p.prefix} ${nm}`;
+        }
+      }
+
+      // Sort: nulls (warnings) first, then soonest endsAt
+      timers.sort((a, b) => {
+        if (a.endsAt === null && b.endsAt === null) return 0;
+        if (a.endsAt === null) return -1;
+        if (b.endsAt === null) return 1;
+        return new Date(a.endsAt).getTime() - new Date(b.endsAt).getTime();
+      });
+
+      res.json({ timers, characterName: req.session.character.characterName, generatedAt: new Date().toISOString() });
+    } catch (error) {
+      console.error("Timers error:", error);
+      res.status(500).json({ error: "Failed to aggregate timers" });
+    }
+  });
+
+  // ============================================================================
+  // CHAT (v1.0.0) — Global + Corp + Alliance channels, WebSocket realtime
+  // ============================================================================
+  const chatRateLimit = new Map<number, number>(); // characterId -> last post ms
+  const charOrgCache = new Map<number, { corpId: number | null; allianceId: number | null; ts: number }>();
+  // Resolve a character's corp + alliance via public ESI, cached 1h.
+  async function getCharacterOrg(characterId: number): Promise<{ corpId: number | null; allianceId: number | null }> {
+    const cached = charOrgCache.get(characterId);
+    if (cached && Date.now() - cached.ts < 3600_000) return { corpId: cached.corpId, allianceId: cached.allianceId };
+    try {
+      const r = await fetch(`${ESI_BASE_URL}/characters/${characterId}/?datasource=tranquility`);
+      if (r.ok) {
+        const d = await r.json();
+        const org = { corpId: d.corporation_id ?? null, allianceId: d.alliance_id ?? null };
+        charOrgCache.set(characterId, { ...org, ts: Date.now() });
+        return org;
+      }
+    } catch { /* ignore */ }
+    return { corpId: null, allianceId: null };
+  }
+
+  // --- WebSocket: lightweight "something changed" notifier (no content, no auth needed) ---
+  // Clients refetch the affected channel over the authed HTTP endpoint, which enforces membership.
+  const chatWss = new WebSocketServer({ server: httpServer, path: "/ws/chat" });
+  function broadcastChat(payload: { type: string; channel: string; corpId?: number | null; allianceId?: number | null }) {
+    const data = JSON.stringify(payload);
+    chatWss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) client.send(data);
+    });
+  }
+  chatWss.on("connection", (ws) => {
+    ws.on("error", () => { /* ignore */ });
+  });
+
+  const validChannel = (c: string) => (c === "corp" || c === "alliance") ? c : "global";
+
+  // GET /api/chat/:channel?since=<id>&before=<id>  (channel: global | corp | alliance)
+  app.get("/api/chat/:channel", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const channel = validChannel(req.params.channel);
+      const since = parseInt((req.query.since as string) || "0", 10) || 0;
+      const before = parseInt((req.query.before as string) || "0", 10) || 0;
+      const characterId = req.session.character.characterId;
+
+      let orgId: number | null = null;
+      if (channel === "corp" || channel === "alliance") {
+        const org = await getCharacterOrg(characterId);
+        orgId = channel === "corp" ? org.corpId : org.allianceId;
+        if (orgId == null) {
+          res.json({ messages: [], channel, orgId: null, isAdmin: false });
+          return;
+        }
+      }
+
+      const messages = before > 0
+        ? await storage.getChatMessagesBefore(channel, orgId, before, 40)
+        : await storage.getChatMessages(channel, orgId, since, 60);
+      const isAdmin = await isAdminAsync(characterId);
+      res.json({ messages, channel, orgId, isAdmin, characterId });
+    } catch (error) {
+      console.error("Chat fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch chat" });
+    }
+  });
+
+  // POST /api/chat/:channel  body: { text }
+  app.post("/api/chat/:channel", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const channel = validChannel(req.params.channel);
+      const characterId = req.session.character.characterId;
+      const text = String(req.body?.text ?? "").trim();
+
+      if (!text) { res.status(400).json({ error: "Message is empty" }); return; }
+      if (text.length > 500) { res.status(400).json({ error: "Message too long (max 500)" }); return; }
+
+      const last = chatRateLimit.get(characterId) ?? 0;
+      if (Date.now() - last < 1500) { res.status(429).json({ error: "Slow down a moment" }); return; }
+
+      let corpId: number | null = null;
+      let allianceId: number | null = null;
+      if (channel === "corp" || channel === "alliance") {
+        const org = await getCharacterOrg(characterId);
+        corpId = org.corpId;
+        allianceId = org.allianceId;
+        if (channel === "corp" && corpId == null) { res.status(400).json({ error: "No corporation on record" }); return; }
+        if (channel === "alliance" && allianceId == null) { res.status(400).json({ error: "You are not in an alliance" }); return; }
+      }
+
+      const message = await storage.saveChatMessage({
+        channel, corpId, allianceId,
+        fromCharacterId: characterId,
+        fromName: req.session.character.characterName,
+        text,
+      });
+      chatRateLimit.set(characterId, Date.now());
+      broadcastChat({ type: "message", channel, corpId, allianceId });
+      res.json({ message });
+    } catch (error) {
+      console.error("Chat post error:", error);
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  // DELETE /api/chat/message/:id  (own message, or admin)
+  app.delete("/api/chat/message/:id", async (req: Request, res: Response) => {
+    if (!req.session.character) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+      const characterId = req.session.character.characterId;
+      const isAdmin = await isAdminAsync(characterId);
+      const ok = await storage.deleteChatMessage(id, characterId, isAdmin);
+      if (!ok) { res.status(403).json({ error: "Not allowed" }); return; }
+      broadcastChat({ type: "delete", channel: "*" });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Chat delete error:", error);
+      res.status(500).json({ error: "Failed to delete message" });
     }
   });
 

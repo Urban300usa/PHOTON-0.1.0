@@ -11,11 +11,17 @@ import { SidebarActionsProvider, useSidebarActions } from "@/contexts/SidebarAct
 import { CharacterViewProvider } from "@/contexts/CharacterViewContext";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { TopBar } from "@/components/TopBar";
+import CommandPalette from "@/components/CommandPalette";
+import { CommandPaletteProvider } from "@/contexts/CommandPaletteContext";
+import { ChatProvider } from "@/contexts/ChatContext";
 import AuthGate from "@/components/AuthGate";
 import ProActivationModal from "@/components/ProActivationModal";
 import PageTransition from "@/components/PageTransition";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { WhatsNewProvider } from "@/contexts/WhatsNewContext";
 import Home from "@/pages/home";
+import OverviewPage from "@/pages/overview";
 import LoginPage from "@/pages/login";
 import SharePage from "@/pages/share";
 import MiningPage from "@/pages/mining";
@@ -33,6 +39,18 @@ import AdmReportPage from "@/pages/adm-report";
 import JumpPlannerPage from "@/pages/jump-planner";
 import AnalyticsPage from "@/pages/analytics";
 import MarketIntelPage from "@/pages/market-intel";
+import JumpClonesPage from "@/pages/jump-clones";
+import WalletTransactionsPage from "@/pages/wallet-transactions";
+import LoyaltyPointsPage from "@/pages/loyalty-points";
+import StandingsPage from "@/pages/standings";
+import NotificationsPage from "@/pages/notifications";
+import KillboardPage from "@/pages/killboard";
+import NetWorthHistoryPage from "@/pages/net-worth-history";
+import TimersPage from "@/pages/timers";
+import MarketOrdersPage from "@/pages/market-orders";
+import BlueprintsPage from "@/pages/blueprints";
+import ChatPage from "@/pages/chat";
+import LeaderboardsPage from "@/pages/leaderboards";
 import NotFound from "@/pages/not-found";
 import { Footer } from "@/components/Footer";
 import { BackgroundEffect } from "@/components/BackgroundEffect";
@@ -50,11 +68,14 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-full">
         <AppSidebar />
         <SidebarInset className="flex flex-col flex-1 overflow-hidden">
+          <TopBar />
           <main className="flex-1 overflow-auto flex flex-col">
             <div className="flex-1">
               <AnimatePresence mode="wait">
                 <PageTransition>
-                  {children}
+                  <ErrorBoundary>
+                    {children}
+                  </ErrorBoundary>
                 </PageTransition>
               </AnimatePresence>
             </div>
@@ -62,6 +83,7 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
           </main>
         </SidebarInset>
       </div>
+      <CommandPalette />
       <ProActivationModal
         open={isProModalOpen}
         onOpenChange={setProModalOpen}
@@ -176,6 +198,90 @@ function Router() {
           </AuthenticatedLayout>
         </AuthGate>
       </Route>
+      <Route path="/jump-clones">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <JumpClonesPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/wallet/transactions">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <WalletTransactionsPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/loyalty-points">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <LoyaltyPointsPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/standings">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <StandingsPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/notifications">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <NotificationsPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/killboard">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <KillboardPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/analytics/net-worth">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <NetWorthHistoryPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/timers">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <TimersPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/market-orders">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <MarketOrdersPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/blueprints">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <BlueprintsPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/chat">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <ChatPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/leaderboards">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <LeaderboardsPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
       <Route path="/support">
         <AuthGate>
           <AuthenticatedLayout>
@@ -190,10 +296,17 @@ function Router() {
           </AuthenticatedLayout>
         </AuthGate>
       </Route>
-      <Route path="/">
+      <Route path="/ratting">
         <AuthGate>
           <AuthenticatedLayout>
             <Home />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <OverviewPage />
           </AuthenticatedLayout>
         </AuthGate>
       </Route>
@@ -217,8 +330,12 @@ function App() {
               <SmartTooltipProvider>
                 <TooltipProvider>
                   <WhatsNewProvider>
-                    <Toaster />
-                    <Router />
+                    <CommandPaletteProvider>
+                      <ChatProvider>
+                        <Toaster />
+                        <Router />
+                      </ChatProvider>
+                    </CommandPaletteProvider>
                   </WhatsNewProvider>
                 </TooltipProvider>
               </SmartTooltipProvider>

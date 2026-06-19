@@ -1,0 +1,11 @@
+# PHOTON reverse proxy — automatic HTTPS via Let's Encrypt.
+# $DOMAIN comes from the environment (set in .env / docker-compose.prod.yml).
+# Caddy forwards WebSocket upgrades (e.g. /ws/chat) transparently — no extra config.
+
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:5000 {
+		health_uri /api/health
+		health_interval 30s
+	}
+}

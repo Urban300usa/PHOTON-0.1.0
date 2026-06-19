@@ -209,15 +209,21 @@
   --destructive-foreground: 0 84% 98%;
   --input: 210 12% 72%;
   --ring: 195 100% 35%;
-  --chart-1: 195 95% 30%;
-  --chart-2: 200 90% 35%;
-  --chart-3: 185 85% 32%;
-  --chart-4: 190 80% 28%;
-  --chart-5: 205 75% 33%;
+  --chart-1: 195 95% 32%;  /* cyan (brand) */
+  --chart-2: 158 70% 32%;  /* teal-green */
+  --chart-3: 265 60% 50%;  /* violet */
+  --chart-4: 35 90% 42%;   /* amber */
+  --chart-5: 330 65% 48%;  /* magenta */
   --font-sans: Open Sans, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: .5rem;
+  /* HUD design system (v0.8.0) — additive; references existing theme color vars
+     so all 15 faction themes inherit the Command-Center HUD look automatically. */
+  --hud-edge: var(--primary);        /* edge-glow / corner-accent hue (HSL triplet) */
+  --hud-radius: 0.625rem;            /* tighter radius for HUD density */
+  --hud-grid-line: var(--border);    /* faint grid/row line hue (HSL triplet) */
+  --hud-space: 0.75rem;              /* base HUD gutter */
   --shadow-2xs: 0px 2px 0px 0px hsl(210 6% 12% / 0.02);
   --shadow-xs: 0px 2px 0px 0px hsl(210 6% 12% / 0.04);
   --shadow-sm: 0px 2px 0px 0px hsl(210 6% 12% / 0.02), 0px 1px 2px -1px hsl(210 6% 12% / 0.06);
@@ -293,11 +299,11 @@
   --destructive-foreground: 0 0% 98%;
   --input: 220 22% 20%;
   --ring: 190 100% 50%;
-  --chart-1: 190 100% 50%;
-  --chart-2: 200 95% 55%;
-  --chart-3: 185 90% 60%;
-  --chart-4: 195 85% 52%;
-  --chart-5: 205 80% 58%;
+  --chart-1: 190 100% 50%;  /* cyan (brand) */
+  --chart-2: 158 78% 45%;   /* teal-green */
+  --chart-3: 265 78% 68%;   /* violet */
+  --chart-4: 38 95% 56%;    /* amber */
+  --chart-5: 330 78% 62%;   /* magenta */
   --shadow-2xs: 0px 2px 0px 0px hsl(215 20% 2% / 0.20);
   --shadow-xs: 0px 2px 0px 0px hsl(215 20% 2% / 0.25);
   --shadow-sm: 0px 2px 0px 0px hsl(215 20% 2% / 0.20), 0px 1px 2px -1px hsl(215 20% 2% / 0.30);
@@ -1550,6 +1556,123 @@
   );
   pointer-events: none;
   border-radius: inherit;
+}
+
+/* ============================================
+   COMMAND-CENTER HUD (v0.8.0)
+   Theme-safe utilities — all color via hsl(var(--…))
+   ============================================ */
+
+/* HUD panel base: tighter radius + edge glow on hover */
+.hud-panel {
+  position: relative;
+}
+.hud-panel:hover {
+  box-shadow: 0 0 24px -8px hsl(var(--hud-edge) / 0.28);
+}
+
+/* Angular corner accents — opt-in so dense/nested cards stay clean */
+.hud-panel--accent::before,
+.hud-panel--accent::after {
+  content: '';
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  pointer-events: none;
+  border-color: hsl(var(--hud-edge) / 0.55);
+  transition: border-color 0.3s ease;
+}
+.hud-panel--accent::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+  border-top-left-radius: var(--hud-radius);
+}
+.hud-panel--accent::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+  border-bottom-right-radius: var(--hud-radius);
+}
+.hud-panel--accent:hover::before,
+.hud-panel--accent:hover::after {
+  border-color: hsl(var(--hud-edge) / 0.9);
+}
+
+/* Mono uppercase micro-label */
+.hud-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Gradient section divider */
+.hud-divider {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, hsl(var(--hud-edge) / 0.5), transparent);
+}
+
+/* Large tabular-nums metric value */
+.hud-metric {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(1.1rem, 3.2vw, 1.9rem);
+}
+
+.hud-label {
+  font-size: 0.7rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ============================================
+   MOTION (v1.0.0) — subtle, theme-safe, respects reduced motion
+   ============================================ */
+@keyframes chat-msg-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.chat-msg-in { animation: chat-msg-in 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
+
+@keyframes fade-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.fade-rise { animation: fade-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Feature-card hover lift (accent panels only, not nested cards) */
+.hud-panel--accent { transition: box-shadow 0.25s ease, transform 0.2s ease, border-color 0.25s ease; }
+.hud-panel--accent:hover { transform: translateY(-2px); }
+
+/* Sidebar menu hover/press feel */
+[data-sidebar="menu-button"] { transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease; }
+[data-sidebar="menu-button"]:active { transform: scale(0.98); }
+
+/* Soft shimmer utility */
+@keyframes hud-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.hud-shimmer {
+  background: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.06), transparent);
+  background-size: 200% 100%;
+  animation: hud-shimmer 1.6s linear infinite;
+}
+
+/* Respect the "reduce motion" preference (toggle class on <html>) and the OS setting */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 /* Holographic shimmer effect */

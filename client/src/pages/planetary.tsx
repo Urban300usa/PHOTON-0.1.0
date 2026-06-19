@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -624,27 +625,22 @@ export default function PlanetaryIndustry() {
   
   return (
     <div className="container max-w-6xl mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Globe2 className="h-6 w-6" />
-            Planetary Industry
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {viewAll ? 'Viewing all characters' : `Viewing ${character?.name || 'active character'}`}
-          </p>
-        </div>
-        
-        <Button
-          variant="outline"
-          onClick={() => syncMutation.mutate()}
-          disabled={syncMutation.isPending}
-          data-testid="button-sync-pi"
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
-          {syncMutation.isPending ? 'Syncing...' : 'Sync from ESI'}
-        </Button>
-      </div>
+      <PageHeader
+        icon={Globe2}
+        title="Planetary Industry"
+        subtitle={viewAll ? 'Viewing all characters' : `Viewing ${character?.name || 'active character'}`}
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => syncMutation.mutate()}
+            disabled={syncMutation.isPending}
+            data-testid="button-sync-pi"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
+            {syncMutation.isPending ? 'Syncing...' : 'Sync from ESI'}
+          </Button>
+        }
+      />
       
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <Card>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -258,50 +259,45 @@ export default function AnalyticsPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <BarChart3 className="h-6 w-6" />
-            Income Analytics
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Track your ISK flow across all income sources
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {viewAll && (
-            <Badge variant="secondary" className="text-xs">
-              <Users className="h-3 w-3 mr-1" />
-              All Characters
-            </Badge>
-          )}
-          <div className="flex rounded-md border border-border overflow-hidden">
-            {TIME_RANGES.map((range) => (
-              <button
-                key={range.value}
-                onClick={() => setTimeRange(range.value)}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                  timeRange === range.value
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-background hover:bg-muted text-muted-foreground"
-                }`}
-              >
-                {range.value}
-              </button>
-            ))}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => recalculateMutation.mutate()}
-            disabled={recalculateMutation.isPending}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${recalculateMutation.isPending ? "animate-spin" : ""}`} />
-            Sync from ESI
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        icon={BarChart3}
+        title="Income Analytics"
+        subtitle="Track your ISK flow across all income sources"
+        actions={
+          <>
+            {viewAll && (
+              <Badge variant="secondary" className="text-xs">
+                <Users className="h-3 w-3 mr-1" />
+                All Characters
+              </Badge>
+            )}
+            <div className="flex rounded-md border border-border overflow-hidden">
+              {TIME_RANGES.map((range) => (
+                <button
+                  key={range.value}
+                  onClick={() => setTimeRange(range.value)}
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                    timeRange === range.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background hover:bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {range.value}
+                </button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => recalculateMutation.mutate()}
+              disabled={recalculateMutation.isPending}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${recalculateMutation.isPending ? "animate-spin" : ""}`} />
+              Sync from ESI
+            </Button>
+          </>
+        }
+      />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

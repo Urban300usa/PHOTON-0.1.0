@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,7 @@ const backgroundOptions: { value: BackgroundEffect; label: string; description: 
 export default function SettingsPage() {
   const { character, isAuthenticated } = useAuth();
   const { isPro } = useProContext();
-  const { mode, theme, backgroundEffect, setMode, setTheme, setBackgroundEffect } = useTheme();
+  const { mode, theme, backgroundEffect, reduceMotion, setMode, setTheme, setBackgroundEffect, setReduceMotion } = useTheme();
   const { triggerExport, setProModalOpen } = useSidebarActions();
   const { toast } = useToast();
   const [isClearing, setIsClearing] = useState(false);
@@ -152,19 +153,11 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         {/* Settings Header */}
-        <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-muted">
-              <Settings className="w-6 h-6 text-muted-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Settings</h1>
-              <p className="text-sm text-muted-foreground">
-                Manage your preferences and account
-              </p>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          icon={Settings}
+          title="Settings"
+          subtitle="Manage your preferences and account"
+        />
 
         <div className="space-y-6">
           {/* Display Settings */}
@@ -228,6 +221,15 @@ export default function SettingsPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Motion */}
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div>
+                  <Label className="text-sm">Reduce Animations</Label>
+                  <p className="text-xs text-muted-foreground">Minimize motion and transitions across the app</p>
+                </div>
+                <Switch checked={reduceMotion} onCheckedChange={setReduceMotion} data-testid="switch-reduce-motion" />
               </div>
 
               <Separator />

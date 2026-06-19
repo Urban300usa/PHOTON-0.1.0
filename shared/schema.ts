@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, bigint, boolean, timestamp, real, jsonb, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, bigint, boolean, timestamp, real, jsonb, uniqueIndex, index, serial, doublePrecision } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -1922,3 +1922,44 @@ export const insertJitaReferencePriceSchema = createInsertSchema(jitaReferencePr
 
 export type InsertJitaReferencePrice = z.infer<typeof insertJitaReferencePriceSchema>;
 export type JitaReferencePrice = typeof jitaReferencePrices.$inferSelect;
+
+// Net Worth History - daily snapshots of total character net worth
+export const netWorthSnapshots = pgTable("net_worth_snapshots", {
+  id: serial("id").primaryKey(),
+  characterId: integer("character_id").notNull(),
+  date: text("date").notNull(), // YYYY-MM-DD
+  totalValue: doublePrecision("total_value").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  uniq: uniqueIndex("net_worth_snapshots_char_date").on(table.characterId, table.date),
+}));
+
+export const insertNetWorthSnapshotSchema = createInsertSchema(netWorthSnapshots).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertNetWorthSnapshot = z.infer<typeof insertNetWorthSnapshotSchema>;
+export type NetWorthSnapshot = typeof netWorthSnapshots.$inferSelect;
+
+// In-app chat — Global + Corp channels
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  channel: text("channel").notNull(), // "global" | "corp" | "alliance"
+  corpId: integer("corp_id"), // set for corp channel
+  allianceId: integer("alliance_id"), // set for alliance channel
+  fromCharacterId: integer("from_character_id").notNull(),
+  fromName: text("from_name").notNull(),
+  text: text("text").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  channelIdx: index("chat_messages_channel_idx").on(table.channel, table.corpId, table.allianceId, table.id),
+}));
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;

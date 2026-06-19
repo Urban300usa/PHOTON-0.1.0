@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -386,26 +387,21 @@ export default function MarketIntelPage() {
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <TrendingUp className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">Market Intelligence</h1>
-            <p className="text-sm text-muted-foreground">
-              Monitor station markets and identify stocking opportunities
-            </p>
-          </div>
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => syncJitaMutation.mutate()}
-          disabled={syncJitaMutation.isPending}
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${syncJitaMutation.isPending ? "animate-spin" : ""}`} />
-          Sync Jita Prices
-        </Button>
-      </div>
+      <PageHeader
+        icon={TrendingUp}
+        title="Market Intelligence"
+        subtitle="Monitor station markets and identify stocking opportunities"
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => syncJitaMutation.mutate()}
+            disabled={syncJitaMutation.isPending}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${syncJitaMutation.isPending ? "animate-spin" : ""}`} />
+            Sync Jita Prices
+          </Button>
+        }
+      />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

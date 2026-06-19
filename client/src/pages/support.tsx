@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -961,12 +962,11 @@ export default function SupportPage() {
 
   return (
     <div className="container mx-auto py-6 px-4 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Support Center</h1>
-        <p className="text-muted-foreground">
-          Get help with PHOTON - submit bug reports, feature requests, or ask questions
-        </p>
-      </div>
+      <PageHeader
+        icon={HelpCircle}
+        title="Support Center"
+        subtitle="Get help with PHOTON - submit bug reports, feature requests, or ask questions"
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -823,36 +824,27 @@ export default function MoonCalculatorPage({ embedded = false }: MoonCalculatorP
   return (
     <div className="min-h-screen p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Moon className="w-8 h-8 text-primary" />
-              <div>
-                <h1 className="text-2xl font-bold">Metenox Moon Calculator</h1>
-                <p className="text-muted-foreground text-sm">
-                  Paste EVE probe scan data to calculate monthly ISK values for Metenox structures
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={saveToDatabase}
-                disabled={isSavingToDb || moons.length === 0}
-                data-testid="button-save-to-database"
-              >
-                {isSavingToDb ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Database className="w-4 h-4 mr-2" />
-                )}
-                Save to Account
-              </Button>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          icon={Moon}
+          title="Metenox Moon Calculator"
+          subtitle="Paste EVE probe scan data to calculate monthly ISK values for Metenox structures"
+          actions={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={saveToDatabase}
+              disabled={isSavingToDb || moons.length === 0}
+              data-testid="button-save-to-database"
+            >
+              {isSavingToDb ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Database className="w-4 h-4 mr-2" />
+              )}
+              Save to Account
+            </Button>
+          }
+        />
         
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

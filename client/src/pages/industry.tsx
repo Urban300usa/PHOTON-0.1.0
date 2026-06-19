@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -354,18 +355,11 @@ export default function IndustryPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6" data-testid="industry-page">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Factory className="h-6 w-6" />
-            Industry Jobs
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Track manufacturing, research, invention, and reactions
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-2">
+      <PageHeader
+        icon={Factory}
+        title="Industry Jobs"
+        subtitle="Track manufacturing, research, invention, and reactions"
+        actions={
           <Button
             variant="outline"
             size="sm"
@@ -376,8 +370,8 @@ export default function IndustryPage() {
             <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
             {syncMutation.isPending ? 'Syncing...' : 'Sync from ESI'}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {hasError && (
         <Card className="border-destructive/50 bg-destructive/10">

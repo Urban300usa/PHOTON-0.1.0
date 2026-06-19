@@ -88,6 +88,11 @@ import {
   type InsertShipSkillRequirement,
   type SkillMetadata,
   type InsertSkillMetadata,
+  netWorthSnapshots as netWorthSnapshotsTable,
+  type NetWorthSnapshot,
+  type InsertNetWorthSnapshot,
+  chatMessages as chatMessagesTable,
+  type ChatMessage,
   type EveShip,
   type InsertEveShip,
   // ADM Reports types
@@ -123,7 +128,7 @@ import {
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import { db } from "./db";
-import { eq, and, lt, desc, ilike, gte, lte, sql, inArray } from "drizzle-orm";
+import { eq, and, lt, gt, desc, ilike, gte, lte, sql, inArray } from "drizzle-orm";
 import { getCachedCorpAllianceInfo } from "./esiCache";
 
 // Special badge data structure (in-memory for now)
@@ -3181,11 +3186,21 @@ export class DatabaseStorage extends MemStorage {
   async deleteRattingSession(sessionId: string, characterId: number): Promise<boolean> {
     const session = await this.getRattingSessionById(sessionId);
     if (!session || session.characterId !== characterId) return false;
-    
+
     await db.delete(rattingSessionsTable)
       .where(eq(rattingSessionsTable.id, sessionId));
-    
+
     return true;
+  }
+
+  // Clear all completed (non-active) ratting sessions for a character
+  async clearAllRattingSessions(characterId: number): Promise<number> {
+    const result = await db.delete(rattingSessionsTable)
+      .where(and(
+        eq(rattingSessionsTable.characterId, characterId),
+        eq(rattingSessionsTable.isActive, false)
+      ));
+    return (result as any).rowCount ?? 0;
   }
 
   // Admin session database methods
@@ -5798,7 +5813,8 @@ export class DatabaseStorage extends MemStorage {
       ));
     
     for (const row of rows) {
-      result.set(row.id, { name: row.name, category: row.category });
+      // pg returns bigint columns as strings; convert to number for Map key consistency
+      result.set(Number(row.id), { name: row.name, category: row.category });
     }
     return result;
   }
@@ -6865,6 +6881,84 @@ export class DatabaseStorage extends MemStorage {
     return db.select()
       .from(jitaReferencePricesTable)
       .where(inArray(jitaReferencePricesTable.typeId, typeIds));
+  }
+
+  // ============================================================================
+  // Net Worth History methods
+  // ============================================================================
+
+  async saveNetWorthSnapshot(characterId: number, date: string, totalValue: number): Promise<void> {
+    await db.insert(netWorthSnapshotsTable)
+      .values({ characterId, date, totalValue })
+      .onConflictDoUpdate({
+        target: [netWorthSnapshotsTable.characterId, netWorthSnapshotsTable.date],
+        set: { totalValue },
+      });
+  }
+
+  async getNetWorthHistory(characterId: number, days: number): Promise<{ date: string; totalValue: number }[]> {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+    const rows = await db.select({
+      date: netWorthSnapshotsTable.date,
+      totalValue: netWorthSnapshotsTable.totalValue,
+    })
+      .from(netWorthSnapshotsTable)
+      .where(and(
+        eq(netWorthSnapshotsTable.characterId, characterId),
+        gte(netWorthSnapshotsTable.date, cutoffStr),
+      ))
+      .orderBy(netWorthSnapshotsTable.date);
+
+    return rows;
+  }
+
+  // ============================================================================
+  // Chat methods
+  // ============================================================================
+
+  async saveChatMessage(msg: { channel: string; corpId: number | null; allianceId: number | null; fromCharacterId: number; fromName: string; text: string }): Promise<ChatMessage> {
+    const [row] = await db.insert(chatMessagesTable).values(msg).returning();
+    return row;
+  }
+
+  private chatChannelCond(channel: string, orgId: number | null) {
+    const conds: any[] = [eq(chatMessagesTable.channel, channel)];
+    if (channel === "corp" && orgId != null) conds.push(eq(chatMessagesTable.corpId, orgId));
+    if (channel === "alliance" && orgId != null) conds.push(eq(chatMessagesTable.allianceId, orgId));
+    return conds;
+  }
+
+  // Recent messages with id > sinceId (polling / initial load)
+  async getChatMessages(channel: string, orgId: number | null, sinceId: number, limit: number): Promise<ChatMessage[]> {
+    const conds = [...this.chatChannelCond(channel, orgId), gt(chatMessagesTable.id, sinceId)];
+    const rows = await db.select()
+      .from(chatMessagesTable)
+      .where(and(...conds))
+      .orderBy(desc(chatMessagesTable.id))
+      .limit(limit);
+    return rows.reverse(); // oldest → newest
+  }
+
+  // Older messages with id < beforeId (pagination "load earlier")
+  async getChatMessagesBefore(channel: string, orgId: number | null, beforeId: number, limit: number): Promise<ChatMessage[]> {
+    const conds = [...this.chatChannelCond(channel, orgId), lt(chatMessagesTable.id, beforeId)];
+    const rows = await db.select()
+      .from(chatMessagesTable)
+      .where(and(...conds))
+      .orderBy(desc(chatMessagesTable.id))
+      .limit(limit);
+    return rows.reverse();
+  }
+
+  async deleteChatMessage(id: number, characterId: number, isAdmin: boolean): Promise<boolean> {
+    const [msg] = await db.select().from(chatMessagesTable).where(eq(chatMessagesTable.id, id)).limit(1);
+    if (!msg) return false;
+    if (!isAdmin && msg.fromCharacterId !== characterId) return false;
+    await db.delete(chatMessagesTable).where(eq(chatMessagesTable.id, id));
+    return true;
   }
 }
 

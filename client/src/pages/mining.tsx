@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -590,68 +591,65 @@ export default function MiningPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
-        <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-amber-500/10">
-              <Pickaxe className="w-6 h-6 text-amber-500" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Mining Tracker</h1>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Powered by Janice</span>
-                {miningData?.lastUpdated && (
-                  <>
-                    <span className="text-muted-foreground/50">|</span>
-                    <span className="flex items-center gap-1">
-                      {isFetching ? (
-                        <>
-                          <RefreshCw className="w-3 h-3 animate-spin" />
-                          <span>Updating...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Clock className="w-3 h-3" />
-                          <span data-testid="text-mining-last-updated">
-                            Updated {formatDistanceToNow(new Date(miningData.lastUpdated), { addSuffix: true })}
-                          </span>
-                        </>
-                      )}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => setShowSettings(!showSettings)}
-              data-testid="button-settings-mining"
-            >
-              <Settings2 className="w-4 h-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={exportToCSV}
-              disabled={!miningData || isLoading}
-              data-testid="button-export-mining"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => refetch()}
-              disabled={isFetching}
-              data-testid="button-refresh-mining"
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          icon={Pickaxe}
+          title="Mining Tracker"
+          subtitle={
+            <span className="flex items-center gap-2">
+              <span>Powered by Janice</span>
+              {miningData?.lastUpdated && (
+                <>
+                  <span className="text-muted-foreground/50">|</span>
+                  <span className="flex items-center gap-1">
+                    {isFetching ? (
+                      <>
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="w-3 h-3" />
+                        <span data-testid="text-mining-last-updated">
+                          Updated {formatDistanceToNow(new Date(miningData.lastUpdated), { addSuffix: true })}
+                        </span>
+                      </>
+                    )}
+                  </span>
+                </>
+              )}
+            </span>
+          }
+          actions={
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setShowSettings(!showSettings)}
+                data-testid="button-settings-mining"
+              >
+                <Settings2 className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                onClick={exportToCSV}
+                disabled={!miningData || isLoading}
+                data-testid="button-export-mining"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => refetch()}
+                disabled={isFetching}
+                data-testid="button-refresh-mining"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </>
+          }
+        />
 
         {showSettings && (
           <Card className="mb-6">
