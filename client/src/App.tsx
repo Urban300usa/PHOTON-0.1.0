@@ -53,6 +53,7 @@ import ChatPage from "@/pages/chat";
 import LeaderboardsPage from "@/pages/leaderboards";
 import AppraisalPage from "@/pages/appraisal";
 import LookupPage from "@/pages/lookup";
+import PriceCheckPage from "@/pages/price-check";
 import NotFound from "@/pages/not-found";
 import { Footer } from "@/components/Footer";
 import { BackgroundEffect } from "@/components/BackgroundEffect";
@@ -295,6 +296,13 @@ function Router() {
         <AuthGate>
           <AuthenticatedLayout>
             <LookupPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/price-check">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <PriceCheckPage />
           </AuthenticatedLayout>
         </AuthGate>
       </Route>

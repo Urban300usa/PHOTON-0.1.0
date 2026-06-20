@@ -14365,6 +14365,60 @@ export async function registerRoutes(
     }
   });
 
+  // --- Trade hub price check -----------------------------------------------
+  const PRICE_CHECK_HUBS = [
+    { name: "Jita", system: "The Forge", region: 10000002 },
+    { name: "Amarr", system: "Domain", region: 10000043 },
+    { name: "Dodixie", system: "Sinq Laison", region: 10000032 },
+    { name: "Rens", system: "Heimatar", region: 10000030 },
+    { name: "Hek", system: "Metropolis", region: 10000042 },
+  ];
+
+  // GET /api/tools/price?name=<item>  -> buy/sell across the major trade hubs
+  app.get("/api/tools/price", async (req: Request, res: Response) => {
+    if (!req.session.character) { res.status(401).json({ error: "Not authenticated" }); return; }
+    const name = ((req.query.name as string) || "").trim();
+    if (!name) { res.status(400).json({ error: "Item name required" }); return; }
+    try {
+      const resolved = await resolveItemNames([name]);
+      const match = resolved.get(name.toLowerCase());
+      if (!match) { res.status(404).json({ error: `No item named "${name}"` }); return; }
+
+      const hubs = await Promise.all(PRICE_CHECK_HUBS.map(async (hub) => {
+        let buy = 0, sell = 0, buyVolume = 0, sellVolume = 0;
+        try {
+          const r = await fetch(`https://market.fuzzwork.co.uk/aggregates/?region=${hub.region}&types=${match.id}`,
+            { headers: { "User-Agent": "PHOTON-EVE-Tracker/1.2" } });
+          if (r.ok) {
+            const data = await r.json();
+            const e = data[String(match.id)];
+            buy = parseFloat(e?.buy?.max ?? "0") || 0;
+            sell = parseFloat(e?.sell?.min ?? "0") || 0;
+            buyVolume = parseFloat(e?.buy?.volume ?? "0") || 0;
+            sellVolume = parseFloat(e?.sell?.volume ?? "0") || 0;
+          }
+        } catch (err) { console.warn(`price check ${hub.name} failed:`, err); }
+        return { name: hub.name, system: hub.system, region: hub.region, buy, sell, buyVolume, sellVolume };
+      }));
+
+      // Cheapest place to BUY = lowest sell price (>0). Best place to SELL = highest buy price.
+      const withSell = hubs.filter((h) => h.sell > 0);
+      const withBuy = hubs.filter((h) => h.buy > 0);
+      const bestSellHub = withSell.length ? withSell.reduce((a, b) => (b.sell < a.sell ? b : a)).name : null;
+      const bestBuyHub = withBuy.length ? withBuy.reduce((a, b) => (b.buy > a.buy ? b : a)).name : null;
+
+      res.json({
+        item: { typeId: match.id, name: match.name },
+        hubs,
+        bestSellHub, // cheapest to buy from
+        bestBuyHub,  // best to sell to
+      });
+    } catch (error) {
+      console.error("Price check error:", error);
+      res.status(500).json({ error: "Failed to check prices" });
+    }
+  });
+
   // --- Character intel helpers ---------------------------------------------
   const racesCache: { at: number; map: Map<number, string> } = { at: 0, map: new Map() };
   async function getRaceName(raceId: number): Promise<string | null> {

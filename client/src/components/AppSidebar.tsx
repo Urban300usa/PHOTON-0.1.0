@@ -45,6 +45,7 @@ import {
   MessageSquare,
   Calculator,
   UserSearch,
+  Tag,
 } from "lucide-react";
 import photonLogo from "@assets/lucid-origin_Futuristic_app_icon_glowing_energy_sphere_electri_1764963358793.jpg";
 import {
@@ -217,6 +218,7 @@ export function AppSidebar() {
       label: "Tools",
       items: [
         { title: "Appraisal", url: "/appraisal", icon: Calculator, badge: 0 },
+        { title: "Price Check", url: "/price-check", icon: Tag, badge: 0 },
         { title: "Character Lookup", url: "/lookup", icon: UserSearch, badge: 0 },
       ],
     },

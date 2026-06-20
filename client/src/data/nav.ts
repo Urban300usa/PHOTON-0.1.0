@@ -7,7 +7,7 @@ import {
   GraduationCap, Award, Star,
   Skull, Bell, MessageSquare,
   HelpCircle, Settings,
-  Calculator, UserSearch,
+  Calculator, UserSearch, Tag,
   type LucideIcon,
 } from "lucide-react";
 
