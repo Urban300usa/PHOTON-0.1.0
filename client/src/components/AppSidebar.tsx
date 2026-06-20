@@ -43,6 +43,8 @@ import {
   ChevronDown,
   LayoutDashboard,
   MessageSquare,
+  Calculator,
+  UserSearch,
 } from "lucide-react";
 import photonLogo from "@assets/lucid-origin_Futuristic_app_icon_glowing_energy_sphere_electri_1764963358793.jpg";
 import {
@@ -209,6 +211,13 @@ export function AppSidebar() {
         { title: "Market", url: "/market", icon: ShoppingCart, badge: 0 },
         { title: "Market Orders", url: "/market-orders", icon: CreditCard, badge: 0 },
         { title: "Market Intel", url: "/market-intel", icon: TrendingUp, badge: 0 },
+      ],
+    },
+    {
+      label: "Tools",
+      items: [
+        { title: "Appraisal", url: "/appraisal", icon: Calculator, badge: 0 },
+        { title: "Character Lookup", url: "/lookup", icon: UserSearch, badge: 0 },
       ],
     },
     {

@@ -51,6 +51,8 @@ import MarketOrdersPage from "@/pages/market-orders";
 import BlueprintsPage from "@/pages/blueprints";
 import ChatPage from "@/pages/chat";
 import LeaderboardsPage from "@/pages/leaderboards";
+import AppraisalPage from "@/pages/appraisal";
+import LookupPage from "@/pages/lookup";
 import NotFound from "@/pages/not-found";
 import { Footer } from "@/components/Footer";
 import { BackgroundEffect } from "@/components/BackgroundEffect";
@@ -279,6 +281,20 @@ function Router() {
         <AuthGate>
           <AuthenticatedLayout>
             <LeaderboardsPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/appraisal">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <AppraisalPage />
+          </AuthenticatedLayout>
+        </AuthGate>
+      </Route>
+      <Route path="/lookup">
+        <AuthGate>
+          <AuthenticatedLayout>
+            <LookupPage />
           </AuthenticatedLayout>
         </AuthGate>
       </Route>

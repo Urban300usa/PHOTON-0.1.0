@@ -14223,6 +14223,274 @@ export async function registerRoutes(
     }
   });
 
+  // ============================================================================
+  // TOOLS ENDPOINTS (v1.2.0) — public-data utilities. No ESI character scopes
+  // required: everything here uses public ESI + Fuzzwork + zKillboard, so the
+  // features work for every logged-in user (even before they grant any scopes).
+  // ============================================================================
+
+  const JITA_REGION = 10000002;
+
+  // --- Appraisal helpers ---------------------------------------------------
+  function parseQty(s: string): number | null {
+    const cleaned = (s || "").replace(/[.,'\s]/g, "");
+    if (!/^\d+$/.test(cleaned)) return null;
+    const n = parseInt(cleaned, 10);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+
+  // Per input line, return ordered candidate interpretations (first match wins).
+  // Handles EVE inventory copy (tab-separated), "Name xQty", "Qty Name", trailing
+  // bare numbers (ambiguous → prefer exact full item name, fall back to name+qty),
+  // and bare names (qty 1).
+  function parseAppraisalLines(text: string): Array<Array<{ name: string; quantity: number }>> {
+    const result: Array<Array<{ name: string; quantity: number }>> = [];
+    for (const raw of text.split(/\r?\n/)) {
+      const line = raw.trim();
+      if (!line) continue;
+      const cands: Array<{ name: string; quantity: number }> = [];
+      if (line.includes("\t")) {
+        const cols = line.split("\t").map((c) => c.trim());
+        let qty = 1;
+        for (let i = 1; i < cols.length; i++) { const n = parseQty(cols[i]); if (n != null) { qty = n; break; } }
+        if (cols[0]) cands.push({ name: cols[0], quantity: qty });
+      } else {
+        const xMatch = line.match(/^(.+?)\s+x\s*(\d[\d.,'\s]*)$/i);
+        const leadMatch = line.match(/^(\d[\d.,'\s]*)\s+(?:x\s+)?(.+)$/i);
+        const trailMatch = line.match(/^(.+?)\s+(\d[\d.,'\s]*)$/);
+        if (xMatch && parseQty(xMatch[2]) != null) {
+          cands.push({ name: xMatch[1].trim(), quantity: parseQty(xMatch[2])! });
+        } else if (leadMatch && parseQty(leadMatch[1]) != null) {
+          cands.push({ name: leadMatch[2].trim(), quantity: parseQty(leadMatch[1])! });
+        } else if (trailMatch && parseQty(trailMatch[2]) != null) {
+          // Ambiguous (e.g. "Cap Booster 800" is an item; "Tritanium 1000" is qty).
+          // Prefer the full string as an exact item name; fall back to name + qty.
+          cands.push({ name: line, quantity: 1 });
+          cands.push({ name: trailMatch[1].trim(), quantity: parseQty(trailMatch[2])! });
+        } else {
+          cands.push({ name: line, quantity: 1 });
+        }
+      }
+      if (cands.length) result.push(cands);
+    }
+    return result;
+  }
+
+  // Resolve a set of item names to type ids via public ESI /universe/ids/.
+  async function resolveItemNames(names: string[]): Promise<Map<string, { id: number; name: string }>> {
+    const out = new Map<string, { id: number; name: string }>();
+    const unique = Array.from(new Set(names.map((n) => n.trim()).filter(Boolean)));
+    for (let i = 0; i < unique.length; i += 100) {
+      const batch = unique.slice(i, i + 100);
+      try {
+        const r = await fetch(`${ESI_BASE_URL}/universe/ids/?datasource=tranquility`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(batch),
+        });
+        if (r.ok) {
+          const data = await r.json();
+          for (const it of (data.inventory_types || [])) out.set(it.name.toLowerCase(), { id: it.id, name: it.name });
+        }
+      } catch (err) { console.warn("resolveItemNames batch failed:", err); }
+    }
+    return out;
+  }
+
+  // Fuzzwork Jita aggregates for a set of type ids -> { buy(max), sell(min) }.
+  async function jitaPrices(typeIds: number[]): Promise<Map<number, { buy: number; sell: number }>> {
+    const prices = new Map<number, { buy: number; sell: number }>();
+    const unique = Array.from(new Set(typeIds)).filter((t) => t > 0);
+    for (let i = 0; i < unique.length; i += 200) {
+      const batch = unique.slice(i, i + 200);
+      try {
+        const r = await fetch(`https://market.fuzzwork.co.uk/aggregates/?region=${JITA_REGION}&types=${batch.join(",")}`,
+          { headers: { "User-Agent": "PHOTON-EVE-Tracker/1.2" } });
+        if (r.ok) {
+          const data = await r.json();
+          for (const tid of batch) {
+            const e = data[String(tid)];
+            prices.set(tid, { buy: parseFloat(e?.buy?.max ?? "0") || 0, sell: parseFloat(e?.sell?.min ?? "0") || 0 });
+          }
+        }
+      } catch (err) { console.warn("jitaPrices batch failed:", err); }
+    }
+    return prices;
+  }
+
+  // POST /api/tools/appraisal { text }  -> Jita buy/sell valuation of a pasted list
+  app.post("/api/tools/appraisal", async (req: Request, res: Response) => {
+    if (!req.session.character) { res.status(401).json({ error: "Not authenticated" }); return; }
+    try {
+      const text: string = (req.body?.text ?? "").toString();
+      if (!text.trim()) { res.status(400).json({ error: "No items provided" }); return; }
+
+      const lineCands = parseAppraisalLines(text).slice(0, 500); // cap to 500 lines
+      if (lineCands.length === 0) { res.status(400).json({ error: "Could not parse any items" }); return; }
+
+      // Resolve every candidate name in one pass, then pick the first match per line.
+      const allNames = lineCands.flat().map((c) => c.name);
+      const resolved = await resolveItemNames(allNames);
+
+      const byType = new Map<number, { name: string; quantity: number }>();
+      const unmatched: string[] = [];
+      for (const cands of lineCands) {
+        const hit = cands.find((c) => resolved.has(c.name.toLowerCase()));
+        if (!hit) { unmatched.push(cands[0].name); continue; }
+        const match = resolved.get(hit.name.toLowerCase())!;
+        const cur = byType.get(match.id);
+        if (cur) cur.quantity += hit.quantity;
+        else byType.set(match.id, { name: match.name, quantity: hit.quantity });
+      }
+
+      const prices = await jitaPrices(Array.from(byType.keys()));
+
+      const items = Array.from(byType.entries()).map(([typeId, info]) => {
+        const pr = prices.get(typeId) || { buy: 0, sell: 0 };
+        return {
+          typeId, name: info.name, quantity: info.quantity,
+          buyEach: pr.buy, sellEach: pr.sell,
+          buyTotal: pr.buy * info.quantity, sellTotal: pr.sell * info.quantity,
+          priced: pr.buy > 0 || pr.sell > 0,
+        };
+      }).sort((a, b) => b.sellTotal - a.sellTotal);
+
+      const totals = items.reduce((acc, it) => { acc.buy += it.buyTotal; acc.sell += it.sellTotal; return acc; },
+        { buy: 0, sell: 0 });
+
+      res.json({ market: "Jita (The Forge)", items, unmatched, totals, itemCount: items.length });
+    } catch (error) {
+      console.error("Appraisal error:", error);
+      res.status(500).json({ error: "Failed to appraise items" });
+    }
+  });
+
+  // --- Character intel helpers ---------------------------------------------
+  const racesCache: { at: number; map: Map<number, string> } = { at: 0, map: new Map() };
+  async function getRaceName(raceId: number): Promise<string | null> {
+    if (!raceId) return null;
+    if (racesCache.map.size === 0 || Date.now() - racesCache.at > 24 * 3600 * 1000) {
+      try {
+        const r = await fetch(`${ESI_BASE_URL}/universe/races/?datasource=tranquility`);
+        if (r.ok) {
+          const data = await r.json();
+          racesCache.map = new Map(data.map((x: any) => [x.race_id, x.name]));
+          racesCache.at = Date.now();
+        }
+      } catch { /* ignore */ }
+    }
+    return racesCache.map.get(raceId) ?? null;
+  }
+
+  async function fetchZkillStats(id: number): Promise<any | null> {
+    try {
+      const r = await fetch(`https://zkillboard.com/api/stats/characterID/${id}/`, {
+        headers: { "User-Agent": "PHOTON-EVE-Tracker (github.com/Urban300usa/PHOTON-0.1.0)", Accept: "application/json" },
+        signal: AbortSignal.timeout(6000),
+      });
+      if (!r.ok) return null;
+      const z = await r.json();
+      return {
+        shipsDestroyed: z.shipsDestroyed ?? 0,
+        iskDestroyed: z.iskDestroyed ?? 0,
+        shipsLost: z.shipsLost ?? 0,
+        iskLost: z.iskLost ?? 0,
+        soloKills: z.soloKills ?? 0,
+        dangerRatio: z.dangerRatio ?? null,
+        gangRatio: z.gangRatio ?? null,
+      };
+    } catch { return null; }
+  }
+
+  const charLookupCache = new Map<number, { at: number; data: any }>();
+  const CHAR_LOOKUP_TTL = 10 * 60 * 1000;
+
+  // GET /api/tools/character/search?name=<name>  (registered BEFORE :id)
+  app.get("/api/tools/character/search", async (req: Request, res: Response) => {
+    if (!req.session.character) { res.status(401).json({ error: "Not authenticated" }); return; }
+    const name = ((req.query.name as string) || "").trim();
+    if (!name) { res.status(400).json({ error: "Name required" }); return; }
+    try {
+      const r = await fetch(`${ESI_BASE_URL}/universe/ids/?datasource=tranquility`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify([name]),
+      });
+      if (!r.ok) { res.status(502).json({ error: "ESI lookup failed" }); return; }
+      const data = await r.json();
+      const chars = data.characters || [];
+      const exact = chars.find((c: any) => c.name.toLowerCase() === name.toLowerCase());
+      const match = exact || chars[0];
+      if (!match) { res.status(404).json({ error: "No character found by that name" }); return; }
+      res.json({ id: match.id, name: match.name });
+    } catch (error) {
+      console.error("Character search error:", error);
+      res.status(500).json({ error: "Search failed" });
+    }
+  });
+
+  // GET /api/tools/character/:id  -> aggregated public intel (ESI + zKillboard)
+  app.get("/api/tools/character/:id", async (req: Request, res: Response) => {
+    if (!req.session.character) { res.status(401).json({ error: "Not authenticated" }); return; }
+    const id = parseInt(req.params.id, 10);
+    if (!id || id <= 0) { res.status(400).json({ error: "Invalid character id" }); return; }
+    try {
+      const cached = charLookupCache.get(id);
+      if (cached && Date.now() - cached.at < CHAR_LOOKUP_TTL) { res.json(cached.data); return; }
+
+      const charR = await fetch(`${ESI_BASE_URL}/characters/${id}/?datasource=tranquility`);
+      if (charR.status === 404) { res.status(404).json({ error: "Character not found" }); return; }
+      if (!charR.ok) { res.status(502).json({ error: "ESI character fetch failed" }); return; }
+      const ch = await charR.json();
+
+      const [corp, alliance, history, raceName, zkill] = await Promise.all([
+        fetch(`${ESI_BASE_URL}/corporations/${ch.corporation_id}/?datasource=tranquility`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        ch.alliance_id
+          ? fetch(`${ESI_BASE_URL}/alliances/${ch.alliance_id}/?datasource=tranquility`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+          : Promise.resolve(null),
+        fetch(`${ESI_BASE_URL}/characters/${id}/corporationhistory/?datasource=tranquility`).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+        getRaceName(ch.race_id),
+        fetchZkillStats(id),
+      ]);
+
+      const sortedHist = (Array.isArray(history) ? history : []).slice()
+        .sort((a: any, b: any) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
+      const corpNames = await resolveNames(sortedHist.map((h: any) => h.corporation_id));
+      const histOut = sortedHist.slice(0, 15).map((h: any, i: number) => {
+        const start = new Date(h.start_date).getTime();
+        const end = i === 0 ? Date.now() : new Date(sortedHist[i - 1].start_date).getTime();
+        return {
+          corpId: h.corporation_id,
+          corpName: corpNames.get(h.corporation_id)?.name || `Corp ${h.corporation_id}`,
+          startDate: h.start_date,
+          days: Math.max(0, Math.round((end - start) / 86400000)),
+          current: i === 0,
+        };
+      });
+
+      const ageDays = ch.birthday ? Math.round((Date.now() - new Date(ch.birthday).getTime()) / 86400000) : null;
+      const data = {
+        character: {
+          id, name: ch.name, birthday: ch.birthday ?? null, ageDays,
+          securityStatus: typeof ch.security_status === "number" ? ch.security_status : 0,
+          gender: ch.gender ?? null, race: raceName, description: ch.description ?? null,
+        },
+        corporation: corp
+          ? { id: ch.corporation_id, name: corp.name, ticker: corp.ticker, memberCount: corp.member_count ?? null, founded: corp.date_founded ?? null }
+          : { id: ch.corporation_id, name: `Corp ${ch.corporation_id}`, ticker: null, memberCount: null, founded: null },
+        alliance: ch.alliance_id && alliance ? { id: ch.alliance_id, name: alliance.name, ticker: alliance.ticker } : null,
+        history: histOut,
+        zkill,
+        portrait: `https://images.evetech.net/characters/${id}/portrait?size=256`,
+      };
+      charLookupCache.set(id, { at: Date.now(), data });
+      res.json(data);
+    } catch (error) {
+      console.error("Character intel error:", error);
+      res.status(500).json({ error: "Failed to load character intel" });
+    }
+  });
+
   return httpServer;
 }
 

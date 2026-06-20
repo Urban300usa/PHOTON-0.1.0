@@ -57,7 +57,7 @@ function formatISK(value: number): string {
   return value.toLocaleString();
 }
 
-const FALLBACK_VERSION = "0.4.0";
+const FALLBACK_VERSION = "0.5.0";
 
 export default function Home() {
   const { toast } = useToast();

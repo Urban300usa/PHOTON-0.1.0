@@ -7,6 +7,7 @@ import {
   GraduationCap, Award, Star,
   Skull, Bell, MessageSquare,
   HelpCircle, Settings,
+  Calculator, UserSearch,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,6 +42,9 @@ export const NAV_ITEMS: NavItem[] = [
   { title: "Market", url: "/market", icon: ShoppingCart, group: "Market" },
   { title: "Market Orders", url: "/market-orders", icon: CreditCard, group: "Market" },
   { title: "Market Intel", url: "/market-intel", icon: TrendingUp, group: "Market" },
+
+  { title: "Appraisal", url: "/appraisal", icon: Calculator, group: "Tools" },
+  { title: "Character Lookup", url: "/lookup", icon: UserSearch, group: "Tools" },
 
   { title: "Jump Planner", url: "/jump-planner", icon: Navigation2, group: "Travel" },
   { title: "Jump Clones", url: "/jump-clones", icon: Anchor, group: "Travel" },
